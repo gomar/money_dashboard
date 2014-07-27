@@ -1,7 +1,7 @@
 from flask_frozen import Freezer
-from money_dashboard import money_dashboard
+from app import app
 
-freezer = Freezer(money_dashboard)
+freezer = Freezer(app)
 
 if __name__ == '__main__':
     freezer.freeze()

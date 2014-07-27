@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% block body %}
     <button type="button" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="bottom" title="Add new transaction"><i class="fa fa-plus-square"></i></button>
+    <br><br>
+    {{ data | safe }}
 {% endblock %}
 {% block javascript %}
     <script type='text/javascript'>
