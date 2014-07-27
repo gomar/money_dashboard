@@ -1,14 +1,19 @@
 {% extends 'base.html' %}
 {% block body %}
-    <button type="button" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="bottom" title="Add new transaction"><i class="fa fa-plus-square"></i></button>
-    <br><br>
     {{ data | safe }}
 {% endblock %}
 {% block javascript %}
     <script type='text/javascript'>
-       $(document).ready(function() {
+        $(document).ready(function() {
             $("body").tooltip({ selector: '[data-toggle=tooltip]' });
         });
+        $(function() {
+	        $("td").each(function(){
+	            var txt = $(this).text();
+	            if( !isNaN(txt) && parseInt(txt) < 0 )
+	                $(this).parent().css('class', 'success');
+	        });
+	    });
     </script>
 {% endblock %}
 
