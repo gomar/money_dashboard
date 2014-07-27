@@ -1,18 +1,12 @@
 {% extends 'base.html' %}
-
 {% block body %}
-<div class="container">
-    <div class="hero-unit">
-        <h1>Wotcha!</h1>
-        <p>You now have</p>
-        <ul>
-        	<li>A basic Flask app structure</li>
-            <li>HTML5 Boilerplate</li>
-            <li>Twitter Bootstrap</li>
-            <li>Twitter Bootstrap plugins</li>
-        </ul>
-        <p>installed.</p>
-        <h3>Enjoy coding! - Yeoman (and @romain__berger :p )</h3>
-    </div>
-</div>
+    <button type="button" class="btn btn-primary btn-sm" data-toggle="tooltip" data-placement="bottom" title="Add new transaction"><i class="fa fa-plus-square"></i></button>
 {% endblock %}
+{% block javascript %}
+    <script type='text/javascript'>
+       $(document).ready(function() {
+            $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+        });
+    </script>
+{% endblock %}
+

@@ -1,9 +1,13 @@
 from flask import render_template
+import os
 from money_dashboard import money_dashboard
 from flask.ext.sqlalchemy import SQLAlchemy
 
-money_dashboard.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////static/db/test.db'
+money_dashboard.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///static/db/test.db'
 db = SQLAlchemy(money_dashboard)
+
+if not os.path.isfile('static/db/test.db'):
+	db.create_all()
 
 
 class Transaction(db.Model):
@@ -18,6 +22,9 @@ class Transaction(db.Model):
         self.date = date
         self.description = description
         self.amount = amount
+
+    def __repr__(self):
+        return '<index %r>' % self.index
 
 
 @money_dashboard.route('/')
