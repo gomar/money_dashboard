@@ -7,13 +7,16 @@
         $(document).ready(function() {
             $("body").tooltip({ selector: '[data-toggle=tooltip]' });
         });
-        $(function() {
-	        $("td").each(function(){
-	            var txt = $(this).text();
-	            if( !isNaN(txt) && parseInt(txt) < 0 )
-	                $(this).parent().css('class', 'success');
-	        });
-	    });
+
+	    $(document).ready(function(){
+		    $('td:last-child').each(function(){
+		        var cellVal = parseFloat($(this).text())
+		        if(cellVal > 0)
+		            $(this).addClass("success");
+		        else
+		            $(this).addClass("danger");
+		    });
+		});
     </script>
 {% endblock %}
 
