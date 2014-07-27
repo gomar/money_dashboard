@@ -17,6 +17,10 @@ def index():
 
     data = data.sort(['date'])
     data['balance'] = data['amount'].cumsum()
-    
+
     data = data.to_html(classes=['table table-hover table-bordered'], index=False, escape=False)
     return render_template('index.html', data=data)
+
+@app.route('/add_transaction')
+def add_transaction():
+    pass
