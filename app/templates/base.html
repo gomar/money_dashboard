@@ -15,6 +15,8 @@
 
     <!-- Custom styles for this template -->
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+
+    {% block css %}{% endblock %}
   </head>
 
   <body>
@@ -33,9 +35,11 @@
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a href="/add_transaction"><i class="fa fa-plus-square"></i></a></li>
+            <li><a href="/"><i class="fa fa-table"></i></a></li>
+            <li><a href="/show_graphs"><i class="fa fa-bar-chart-o"></i></a></li>
+            <li><a href="/add_transaction"><i class="fa fa-plus"></i></a></li>
             <li><a href="/edit_transaction"><i class="fa fa-edit"></i></a></li>
-            <li><a href="/remove_transaction"><i class="fa fa-minus-square"></i></a></li>
+            <li><a href="/remove_transaction"><i class="fa fa-trash-o"></i></a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -54,6 +58,16 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script>
+      var url = window.location;
+      // Will only work if string in href matches with location
+      $('ul.nav a[href="'+ url +'"]').parent().addClass('active');
+
+      // Will also work for relative and absolute hrefs
+      $('ul.nav a').filter(function() {
+          return this.href == url;
+      }).parent().addClass('active');
+    </script>
     {% block javascript %}{% endblock %}
   </body>
 </html>
