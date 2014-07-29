@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% import 'form_macros.html' as macros %}
+{% block css %}
+<link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+{% endblock css %}
+{% block body %}
+    {% call macros.render_form(form, action_url='', action_text='Add transaction', class_='') %}
+        {{ macros.render_field(form.description, label_visible=True, placeholder='') }}
+        {{ macros.render_field(form.date, label_visible=True, placeholder='', id="my-datepicker") }}
+    {% endcall %}
+{% endblock body %}
+{% block javascript %}
+<script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+<script type="text/javascript">
+$('#my-datepicker').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    todayHighlight: true
+});
+</script>
+{% endblock javascript %}
