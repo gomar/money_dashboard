@@ -2,15 +2,80 @@
 {% import 'form_macros.html' as macros %}
 {% block css %}
 <link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}" rel="stylesheet">
+<style type="text/css">
+	.btn-custom {
+		 
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid #dce4ec;
+  border-radius: 3px;
+    border-width: 2px;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  	}
+  	.btn-custom:hover{
+  		color: inherit;
+  	}
+  	.btn-custom:focus{
+  		color: inherit;
+   		-webkit-box-shadow: none;
+  		box-shadow: none;
+  	}
+</style>
 {% endblock css %}
 {% block body %}
-    {% call macros.render_form(form, action_url='', action_text='Add transaction', class_='') %}
-        {{ macros.render_field(form.description, label_visible=True, placeholder='') }}
-        {{ macros.render_field(form.date, label_visible=True, placeholder='', id="my-datepicker") }}
-    {% endcall %}
+	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
+		<!-- DATE -->
+	    <div class="form-group {% if form.date.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.date.label }}</label>
+	        <div class="col-md-4">
+		        {{ form.date(class_='form-control', id="my-datepicker") }}
+		        {% if form.date.errors %}
+		            {% for e in form.date.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- AMOUNT -->
+	   	<div class="form-group {% if form.date.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.amount.label }}</label>
+	        <div class="col-md-4">
+	        	<div class="input-group">
+		        	{{ form.amount(class_='form-control') }}
+		        	<div class="input-group-addon"><i class="fa fa-gbp"></i></div>
+			    </div>
+		        {% if form.amount.errors %}
+		            {% for e in form.amount.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- DESCRIPTION -->
+	   	<div class="form-group {% if form.date.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.description.label }}</label>
+	        <div class="col-md-10">
+	        	{{ form.amount(class_='form-control') }}
+		        {% if form.description.errors %}
+		            {% for e in form.description.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- CATEGORY -->
+	   	<div class="form-group">
+	        <label class="control-label col-md-2">{{ form.category.label }}</label>
+	        	{{ form.category(class_='selectpicker col-md-10') }}
+	    </div>
+        <button type="submit" class="pull-right btn btn-success">Add transaction</button>
+    </form>
 {% endblock body %}
 {% block javascript %}
 <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
 <script type="text/javascript">
 $('#my-datepicker').datepicker({
     keyboardNavigation: false,
@@ -18,5 +83,9 @@ $('#my-datepicker').datepicker({
     autoclose: true,
     todayHighlight: true
 });
+$('.selectpicker').selectpicker({
+      style: 'btn-custom',
+      size: 4
+  });
 </script>
 {% endblock javascript %}
