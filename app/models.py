@@ -4,8 +4,9 @@ from app import db
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date)
-    description = db.Column(db.Text)
     amount = db.Column(db.Numeric(precision=2))
+    description = db.Column(db.Text)
+    category = db.Column(db.Text)
     note = db.Column(db.Text)
 
     def __repr__(self):
