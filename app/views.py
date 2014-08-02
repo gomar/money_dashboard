@@ -9,13 +9,40 @@ from app import app, db, models
 @app.route('/')
 def index():
     data = pd.read_sql_table('transaction', db.engine)
-    del data['id'], data['note']
 
+    pd.set_option('display.max_colwidth', 400)
+
+    data['button'] = ('<div class="btn-group btn-group-xs">'
+                      '<a href="#" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>'
+                      '<a href="/delete_transaction/' + data['id'].astype(str) + '" class="btn btn-default" role="button"><i class="fa fa-trash-o"></i></a>'
+                      '</div>')
+
+    # removing id and note from display as html table 
+    del data['id']
+
+    # sorting based on descending date
     data = data.sort(['date'], ascending=False)
+    # adding the total amount
     data['balance'] = data['amount'][::-1].cumsum()[::-1]
 
-    data = data.to_html(classes=['table table-hover table-bordered'], index=False, escape=False)
+    # replacing amount by in and out for easier reading
+    data['in'] = data[data['amount'] >= 0]['amount']
+    data['out'] = data[data['amount'] < 0]['amount']
+    del data['amount']
+
+    # displaying the pandas data as an html table
+    data = data[['button', 'date', 'description', 'category', 'note', 'in', 'out', 'balance']]
+    data = data.to_html(classes=['table table-hover table-bordered'], 
+                        index=False, escape=False, na_rep='')
     return render_template('index.html', data=data)
+
+
+@app.route('/delete_transaction/<int:transaction_id>')
+def delete_transaction(transaction_id):
+    transaction = models.Transaction.query.get(transaction_id)
+    db.session.delete(transaction)
+    db.session.commit()
+    return redirect('/')
 
 
 @app.route('/add_transaction', methods=['GET', 'POST'])

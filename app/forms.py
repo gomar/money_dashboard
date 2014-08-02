@@ -1,6 +1,6 @@
 from flask_wtf import Form
 from wtforms import TextField, DateField, SelectField
-from wtforms.validators import Required
+from wtforms.validators import Required, length
 
 
 
@@ -12,4 +12,4 @@ class AddTransactionForm(Form):
     											('household', 'Household'), 
     	                                        ('day2day', 'Day to day'),
     	                                        ('extras', 'Extra activities')])
-    note = TextField('note')
+    note = TextField('note', [length(max=20)])
