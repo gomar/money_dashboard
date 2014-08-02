@@ -14,11 +14,10 @@ def index():
 
     data['button'] = ('<div class="btn-group btn-group-xs">'
                       '<a href="#" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>'
-                      '<a href="/delete_transaction/' + data['id'].astype(str) + '" class="btn btn-default" role="button"><i class="fa fa-trash-o"></i></a>'
+                      '<a href="/delete_transaction/' + data['id'].astype(str) + 
+                            '" class="btn btn-default" role="button" '
+                            'id="link' + data['id'].astype(str) + '"><i class="fa fa-trash-o"></i></a>'
                       '</div>')
-
-    # removing id and note from display as html table 
-    del data['id']
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
@@ -28,13 +27,16 @@ def index():
     # replacing amount by in and out for easier reading
     data['in'] = data[data['amount'] >= 0]['amount']
     data['out'] = data[data['amount'] < 0]['amount']
-    del data['amount']
+
+    popconfirm = " ".join(['$("#link%d").popConfirm();' % t_id for t_id in data['id']])
+
 
     # displaying the pandas data as an html table
     data = data[['button', 'date', 'description', 'category', 'note', 'in', 'out', 'balance']]
+
     data = data.to_html(classes=['table table-hover table-bordered'], 
                         index=False, escape=False, na_rep='')
-    return render_template('index.html', data=data)
+    return render_template('index.html', data=data, popconfirm=popconfirm)
 
 
 @app.route('/delete_transaction/<int:transaction_id>')
