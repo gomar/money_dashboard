@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block css %}
+    <link href="{{ url_for('static', filename='css/bootstrap-dialog.css') }}" rel="stylesheet">
+{% endblock %}
 {% block body %}
     {{ data | safe }}
 {% endblock %}
@@ -15,10 +18,11 @@
         $(document).on("click", ".confirmdelete", function(e) {
             var link = $(this).attr("href"); // "get" the intended link in a var
             e.preventDefault();
-            BootstrapDialog.show({
+            new BootstrapDialog.show({
+                type: 'type-danger',
                 title: 'Delete Transaction',
                 message: 'Are you sure that you want to delete this transaction?',
-                buttons: [{ label: 'No',
+                buttons: [{ label: 'Cancel',
                             cssClass: 'btn-default',
                             action: function(dialogRef) {
                                 dialogRef.close()
@@ -35,8 +39,9 @@
         $(document).on("click", ".transactioninfo", function(e) {
             var link = $(this).attr("href"); // "get" the intended link in a var
             e.preventDefault();
-            BootstrapDialog.show({
+            new BootstrapDialog.show({
                 title: 'Info',
+                type: 'type-info',
                 message: $('<div></div>').load(link)
             });
         });

@@ -23,14 +23,17 @@ def index():
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
     # adding the total amount
-    data['balance'] = data['amount'][::-1].cumsum()[::-1]
+    data['balance  (<i class="fa fa-gbp"></i>)'] = data['amount'][::-1].cumsum()[::-1]
 
     # replacing amount by in and out for easier reading
-    data['in'] = data[data['amount'] >= 0]['amount']
-    data['out'] = data[data['amount'] < 0]['amount']
+    data['in (<i class="fa fa-gbp"></i>)'] = data[data['amount'] >= 0]['amount']
+    data['out (<i class="fa fa-gbp"></i>)'] = data[data['amount'] < 0]['amount']
 
     # displaying the pandas data as an html table
-    data = data[[' ', 'date', 'description', 'category', 'in', 'out', 'balance']]
+    data = data[[' ', 'date', 'description', 'category', 
+                 'in (<i class="fa fa-gbp"></i>)', 
+                 'out (<i class="fa fa-gbp"></i>)', 
+                 'balance  (<i class="fa fa-gbp"></i>)']]
 
     data = data.to_html(classes=['table table-hover table-bordered'], 
                         index=False, escape=False, na_rep='')
@@ -40,13 +43,17 @@ def index():
 @app.route('/info_transaction/<int:transaction_id>')
 def info_transaction(transaction_id):
     data = pd.read_sql_table('transaction', db.engine)
-    note=data[data['id'] == transaction_id]['note']
-    if len(note):
+    note = data[data['id'] == transaction_id]['note']
+    if len(note) != 0:
+        if note.iloc[0] == '':
+            note = 'No note'
+        else:
+            note = note.iloc[0]
         return render_template('info_transaction.html', 
-                           note=data[data['id'] == transaction_id]['note'])
+                               note=note)
     else:
         return render_template('info_transaction.html', 
-                           note='No note')
+                               note='No note')
 
 
 @app.route('/delete_transaction/<int:transaction_id>')

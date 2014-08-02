@@ -1,12 +1,12 @@
 # depenses
-child
+childcare
 transport
-culture/loisirs
-beaute/vetements
-factures
-divers
-day2day -> course, retrait alimentation
-sante
+Entertainment & Leisure
+Beauty & Clothing
+Bills
+Other
+Day to day expenses
+Healthcare
 
 # revenus
 salaire
