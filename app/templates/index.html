@@ -15,7 +15,14 @@
 		            $(this).addClass("danger");
 		    });
 		});
-		{{ popconfirm | safe }}
+		$("[data-toggle='confirmation']").popConfirm({
+	        title: "Delete transaction", // The title of the confirm
+	        content: "Are you sure ?", // The message of the confirm
+	        placement: "bottom", // The placement of the confirm (Top, Right, Bottom, Left)
+	        container: "body", // The html container
+	        yesBtn: "Yes",
+	        noBtn: "No"
+		});
     </script>
 {% endblock %}
 
