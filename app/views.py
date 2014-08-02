@@ -14,7 +14,8 @@ def index():
 
     data[' '] = ('<div class="btn-group btn-group-xs">'
                       '<a href="#" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>'
-                      '<a href="#" class="btn btn-default transactioninfo" role="button"><i class="fa fa-info"></i></a>'
+                      '<a href="/info_transaction/' + data['id'].astype(str) + 
+                            '"class="btn btn-default transactioninfo" role="button"><i class="fa fa-info"></i></a>'
                       '<a href="/delete_transaction/' + data['id'].astype(str) + 
                             '" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>'
                       '</div>')
@@ -34,6 +35,18 @@ def index():
     data = data.to_html(classes=['table table-hover table-bordered'], 
                         index=False, escape=False, na_rep='')
     return render_template('index.html', data=data)
+
+
+@app.route('/info_transaction/<int:transaction_id>')
+def info_transaction(transaction_id):
+    data = pd.read_sql_table('transaction', db.engine)
+    note=data[data['id'] == transaction_id]['note']
+    if len(note):
+        return render_template('info_transaction.html', 
+                           note=data[data['id'] == transaction_id]['note'])
+    else:
+        return render_template('info_transaction.html', 
+                           note='No note')
 
 
 @app.route('/delete_transaction/<int:transaction_id>')

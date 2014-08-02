@@ -3,7 +3,7 @@
     {{ data | safe }}
 {% endblock %}
 {% block javascript %}
-	<script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap-dialog.min.js') }}"></script>
     <script type='text/javascript'>
 	    $(document).ready(function(){
 		    $('td:last-child').each(function(){
@@ -15,10 +15,29 @@
         $(document).on("click", ".confirmdelete", function(e) {
             var link = $(this).attr("href"); // "get" the intended link in a var
             e.preventDefault();
-            bootbox.confirm("Are you sure?", function(result) {    
-                if (result) {
-                    document.location.href = link;  // if result, "set" the document location       
-                }    
+            BootstrapDialog.show({
+                title: 'Delete Transaction',
+                message: 'Are you sure that you want to delete this transaction?',
+                buttons: [{ label: 'No',
+                            cssClass: 'btn-default',
+                            action: function(dialogRef) {
+                                dialogRef.close()
+                            }}, 
+                          { label: 'Yes',
+                            cssClass: 'btn-danger',
+                            action: function(result) {
+                                if (result) {
+                                    document.location.href = link;
+                                } 
+                            }}]
+            });
+        });
+        $(document).on("click", ".transactioninfo", function(e) {
+            var link = $(this).attr("href"); // "get" the intended link in a var
+            e.preventDefault();
+            BootstrapDialog.show({
+                title: 'Info',
+                message: $('<div></div>').load(link)
             });
         });
     </script>
