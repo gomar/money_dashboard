@@ -10,14 +10,13 @@ from app import app, db, models
 def index():
     data = pd.read_sql_table('transaction', db.engine)
 
-    pd.set_option('display.max_colwidth', 400)
+    pd.set_option('display.max_colwidth', 1000)
 
-    data['button'] = ('<div class="btn-group btn-group-xs">'
+    data[' '] = ('<div class="btn-group btn-group-xs">'
                       '<a href="#" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>'
-                      '<a href="#" class="btn btn-default" role="button"><i class="fa fa-info"></i></a>'
+                      '<a href="#" class="btn btn-default transactioninfo" role="button"><i class="fa fa-info"></i></a>'
                       '<a href="/delete_transaction/' + data['id'].astype(str) + 
-                            '" class="btn btn-danger" role="button" '
-                            'data-toggle="confirmation""><i class="fa fa-trash-o"></i></a>'
+                            '" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>'
                       '</div>')
 
     # sorting based on descending date
@@ -30,7 +29,7 @@ def index():
     data['out'] = data[data['amount'] < 0]['amount']
 
     # displaying the pandas data as an html table
-    data = data[['button', 'date', 'description', 'category', 'in', 'out', 'balance']]
+    data = data[[' ', 'date', 'description', 'category', 'in', 'out', 'balance']]
 
     data = data.to_html(classes=['table table-hover table-bordered'], 
                         index=False, escape=False, na_rep='')

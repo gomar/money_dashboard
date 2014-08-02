@@ -3,11 +3,8 @@
     {{ data | safe }}
 {% endblock %}
 {% block javascript %}
+	<script src="{{ url_for('static', filename='js/bootbox.min.js') }}"></script>
     <script type='text/javascript'>
-        $(document).ready(function() {
-            $("body").tooltip({ selector: '[data-toggle=tooltip]' });
-        });
-
 	    $(document).ready(function(){
 		    $('td:last-child').each(function(){
 		        var cellVal = parseFloat($(this).text())
@@ -15,14 +12,15 @@
 		            $(this).addClass("danger");
 		    });
 		});
-		$("[data-toggle='confirmation']").popConfirm({
-	        title: "Delete transaction", // The title of the confirm
-	        content: "Are you sure ?", // The message of the confirm
-	        placement: "bottom", // The placement of the confirm (Top, Right, Bottom, Left)
-	        container: "body", // The html container
-	        yesBtn: "Yes",
-	        noBtn: "No"
-		});
+        $(document).on("click", ".confirmdelete", function(e) {
+            var link = $(this).attr("href"); // "get" the intended link in a var
+            e.preventDefault();
+            bootbox.confirm("Are you sure?", function(result) {    
+                if (result) {
+                    document.location.href = link;  // if result, "set" the document location       
+                }    
+            });
+        });
     </script>
 {% endblock %}
 
