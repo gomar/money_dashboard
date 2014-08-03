@@ -27,6 +27,8 @@ new Morris.Donut({
   element: 'donut-expenses',
   data: [ {{ donutexpenses | safe }}
   ],
+  formatter: function (y, data) { 
+  	return y + ' (' + Math.floor(100 * y / {{ donutexpensessum | safe }}) + '%)'},
   colors: [
 	'#2C3E50',
 	'#18BC9C',
@@ -40,6 +42,8 @@ new Morris.Donut({
   element: 'donut-incomes',
   data: [ {{ donutincomes | safe }}
   ],
+  formatter: function (y, data) { 
+  	return y + ' (' + Math.floor(100 * y / {{ donutincomessum | safe }}) + '%)'},
   colors: [
 	'#2C3E50',
 	'#18BC9C',

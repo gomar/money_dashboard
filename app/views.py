@@ -1,9 +1,28 @@
-import os
+import os, datetime
 from flask import render_template, Flask, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 import pandas as pd
 import forms
 from app import app, db, models
+
+
+dict_key2expense = {'child': 'Childcare', 
+                    'transport': 'Transport', 
+                    'leisure': 'Culture & Leisure', 
+                    'beauty': 'Beauty & Clothing', 
+                    'bills': 'Bills', 
+                    'other': 'Other', 
+                    'day2day': 'Day to day', 
+                    'healthcare': 'Healthcare'}
+dict_key2income = {'salary': 'Salary', 
+                   'other': 'Other income',
+                   'repayment': 'Misc. repayment'}
+
+
+def replace_all(text, dic):
+    for i, j in dic.iteritems():
+        text = text.replace(i, j)
+    return text
 
 
 @app.route('/')
@@ -27,6 +46,9 @@ def index():
     # replacing amount by in and out for easier reading
     data['in (<i class="fa fa-gbp"></i>)'] = data[data['amount'] >= 0]['amount']
     data['out (<i class="fa fa-gbp"></i>)'] = data[data['amount'] < 0]['amount']
+
+    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2expense))
+    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2income))
 
     # displaying the pandas data as an html table
     data = data[[' ', 'date', 'description', 'category', 
@@ -67,18 +89,9 @@ def delete_transaction(transaction_id):
 def add_expense(operationtype):
     form = forms.AddTransactionForm()
     if operationtype == 'debit':
-        form.category.choices = [('child', 'Childcare'), 
-                                 ('transport', 'Transport'), 
-                                 ('leisure', 'Entertainment & Leisure'), 
-                                 ('beauty', 'Beauty & Clothing'), 
-                                 ('bills', 'Bills'), 
-                                 ('other', 'Other'), 
-                                 ('day2day', 'Day to day expenses'), 
-                                 ('healthcare', 'Healthcare')]
+        form.category.choices = dict_key2expense.items()
     elif operationtype == 'credit':
-        form.category.choices = [('salary', 'Salary'), 
-                                 ('other', 'Other income'),
-                                 ('repayment', 'Miscellaneous repayment')]
+        form.category.choices = dict_key2income.items()
     if form.validate_on_submit():
         if operationtype == 'debit':
             amount = -abs(float(form.amount.data))
@@ -105,12 +118,19 @@ def add_transaction_choice():
 @app.route('/graphs')
 def display_graphs():
     data = pd.read_sql_table('transaction', db.engine)
+
+    month = data['date'].map(lambda x: x.month)
+    data = data[month == datetime.datetime.now().month - 1]
+    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2expense))
+    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2income))
+
     debit = data[data['amount'] < 0][['category', 'amount']]
     debit = debit.groupby('category').sum().abs()
     debit = debit.sort('amount', ascending=False)
     donutexpenses = ''
     for cat in debit.index:
-        donutexpenses += '{label: "%s", value: %.2f},' % (cat, debit.ix[cat])
+        donutexpenses += '{label: "%s", value: %d},' % (cat, debit.ix[cat])
+    donutexpensessum = debit.sum()['amount']
     donutexpenses = donutexpenses[:-1]
     
     credit = data[data['amount'] >= 0][['category', 'amount']]
@@ -118,11 +138,14 @@ def display_graphs():
     credit = credit.sort('amount', ascending=False)
     donutincomes = ''
     for cat in credit.index:
-        donutincomes += '{label: "%s", value: %.2f},' % (cat, credit.ix[cat])
+        donutincomes += '{label: "%s", value: %d},' % (cat, credit.ix[cat])
+    donutincomessum = credit.sum()['amount']
     donutincomes = donutincomes[:-1]
 
     return render_template('graphs.html',
                            donutexpenses=donutexpenses,
-                           donutincomes=donutincomes)
+                           donutexpensessum=donutexpensessum,
+                           donutincomes=donutincomes,
+                           donutincomessum=donutincomessum)
 
 
