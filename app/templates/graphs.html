@@ -6,17 +6,20 @@
 	<H2>Dashboard</H2>
 	<div class="row">
 		<div class="col-md-8">
-			<div class="form-group">
-				<div class="input-daterange input-group input-group-sm" id="my-datepicker">
-					<span class="input-group-addon">Date range</span>
-				  	{{ form.start(class_='input-sm form-control') }}
-				  	<span class="input-group-addon">to</span>
-				  	{{ form.end(class_='input-sm form-control') }}
-				  	<span class="input-group-btn">
-				  		<button class="btn btn-default" type="submit">Analyse</button>
-				  	</span>
+			<form method="POST" action="" role="form">
+				{{ form.csrf_token }}
+				<div class="form-group">
+					<div class="input-daterange input-group input-group-sm" id="datepicker">
+						<span class="input-group-addon">Date range</span>
+					  	{{ form.start(class_='input-sm form-control') }}
+					  	<span class="input-group-addon">to</span>
+					  	{{ form.end(class_='input-sm form-control') }}
+					  	<span class="input-group-btn">
+					  		<button class="btn btn-info" type="submit">Analyse</button>
+					  	</span>
+					</div>
 				</div>
-			</div>
+			</form>
 		</div>
 	</div>
 	<div class="row container">
@@ -39,7 +42,6 @@
 {% block javascript %}
 <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
-<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
 <script src="http://cdn.oesmith.co.uk/morris-0.4.1.min.js"></script>
 <script type="text/javascript">
 new Morris.Donut({
@@ -47,7 +49,7 @@ new Morris.Donut({
   data: [ {{ donutexpenses | safe }}
   ],
   formatter: function (y, data) { 
-  	return y + ' (' + Math.floor(100 * y / {{ donutexpensessum | safe }}) + '%)'},
+  	return Math.floor(y) + ' (' + Math.floor(100 * y / {{ donutexpensessum | safe }}) + '%)'},
   colors: [
 	'#2C3E50',
 	'#18BC9C',
@@ -62,7 +64,7 @@ new Morris.Donut({
   data: [ {{ donutincomes | safe }}
   ],
   formatter: function (y, data) { 
-  	return y + ' (' + Math.floor(100 * y / {{ donutincomessum | safe }}) + '%)'},
+  	return Math.floor(y) + ' (' + Math.floor(100 * y / {{ donutincomessum | safe }}) + '%)'},
   colors: [
 	'#2C3E50',
 	'#18BC9C',

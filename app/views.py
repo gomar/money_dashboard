@@ -1,4 +1,4 @@
-import os, datetime
+import os, datetime, calendar, time
 from flask import render_template, Flask, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 import pandas as pd
@@ -118,39 +118,43 @@ def add_transaction_choice():
 @app.route('/graphs', methods=['GET', 'POST'])
 def display_graphs():
     data = pd.read_sql_table('transaction', db.engine)
-
-    month = data['date'].map(lambda x: x.month)
-    data = data[month == datetime.datetime.now().month]
     data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2expense))
     data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2income))
 
-    debit = data[data['amount'] < 0][['category', 'amount']]
-    debit = debit.groupby('category').sum().abs()
-    debit = debit.sort('amount', ascending=False)
-    donutexpenses = ''
-    for cat in debit.index:
-        donutexpenses += '{label: "%s", value: %d},' % (cat, debit.ix[cat])
-    donutexpensessum = debit.sum()['amount']
-    donutexpenses = donutexpenses[:-1]
-    
-    credit = data[data['amount'] >= 0][['category', 'amount']]
-    credit = credit.groupby('category').sum().abs()
-    credit = credit.sort('amount', ascending=False)
-    donutincomes = ''
-    for cat in credit.index:
-        donutincomes += '{label: "%s", value: %d},' % (cat, credit.ix[cat])
-    donutincomessum = credit.sum()['amount']
-    donutincomes = donutincomes[:-1]
+    def compute(data, start_day, end_day):
+        data = data[(data['date'] >= start_day) & (data['date'] <= end_day)]
+
+        def _donut_data(data):
+            data = data.groupby('category').sum().abs()
+            data = data.sort('amount', ascending=False)
+            donut_data = ''
+            for cat in data.index:
+                donut_data += '{label: "%s", value: %f},' % (cat, data.ix[cat])
+            donut_sum = data.sum()['amount']
+            donut_data = donut_data[:-1]
+            return donut_data, donut_sum
+
+        donutexpenses, donutexpensessum = _donut_data(data=data[data['amount'] < 0][['category', 'amount']])
+        donutincomes, donutincomessum = _donut_data(data=data[data['amount'] >= 0][['category', 'amount']])
+        return donutexpenses, donutexpensessum, donutincomes, donutincomessum
 
     form = forms.SelectDateRangeForm()
-    if form.validate_on_submit():
-        redirect('/')
 
+    if form.validate_on_submit():
+        start_day = datetime.datetime.strptime(form.start.data, '%d/%m/%Y')
+        end_day = datetime.datetime.strptime(form.end.data, '%d/%m/%Y')
+    else:
+        now = datetime.datetime.now()
+        start_day, end_day = calendar.monthrange(year=now.year, month=now.month)
+        start_day = datetime.date(now.year, now.month, 1)
+        end_day = datetime.date(now.year, now.month, end_day)
+        form.start.data = start_day.strftime('%d/%m/%Y')
+        form.end.data = end_day.strftime('%d/%m/%Y')
+        
+    donutexpenses, donutexpensessum, donutincomes, donutincomessum = compute(data=data, start_day=start_day, end_day=end_day)
     return render_template('graphs.html',
                            donutexpenses=donutexpenses,
                            donutexpensessum=donutexpensessum,
                            donutincomes=donutincomes,
                            donutincomessum=donutincomessum,
                            form=form)
-
-
