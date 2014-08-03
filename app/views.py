@@ -82,6 +82,7 @@ def add_expense(operationtype):
                                  ('repayment', 'Miscellaneous repayment')]
     if form.validate_on_submit():
     	u = models.Transaction(date=form.date.data,
+                               reconciled=False,
     		                   amount=form.amount.data,
     		                   description=form.description.data,
     		                   category=form.category.data,

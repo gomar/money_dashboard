@@ -3,6 +3,7 @@ from app import db
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    reconciled = db.Column(db.Boolean)
     date = db.Column(db.Date)
     amount = db.Column(db.Numeric(precision=2))
     description = db.Column(db.Text)
