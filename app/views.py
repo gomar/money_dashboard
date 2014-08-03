@@ -67,6 +67,19 @@ def delete_transaction(transaction_id):
 @app.route('/add_transaction/<operationtype>', methods=['GET', 'POST'])
 def add_expense(operationtype):
     form = forms.AddTransactionForm()
+    if operationtype == 'debit':
+        form.category.choices = [('child', 'Childcare'), 
+                                 ('transport', 'Transport'), 
+                                 ('leisure', 'Entertainment & Leisure'), 
+                                 ('beauty', 'Beauty & Clothing'), 
+                                 ('bills', 'Bills'), 
+                                 ('other', 'Other'), 
+                                 ('day2day', 'Day to day expenses'), 
+                                 ('healthcare', 'Healthcare')]
+    elif operationtype == 'credit':
+        form.category.choices = [('salary', 'Salary'), 
+                                 ('other', 'Other income'),
+                                 ('repayment', 'Miscellaneous repayment')]
     if form.validate_on_submit():
     	u = models.Transaction(date=form.date.data,
     		                   amount=form.amount.data,

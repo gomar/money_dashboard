@@ -8,13 +8,5 @@ class AddTransactionForm(Form):
     date = DateField('date', format='%d/%m/%Y', validators=[Required()])
     amount = TextField('amount', validators=[Required()])
     description = TextField('description', validators=[Required(), length(max=20)])
-    category = SelectField('category', choices=[('child', 'Childcare'), 
-                                                ('transport', 'Transport'), 
-                                                ('leisure', 'Entertainment & Leisure'), 
-                                                ('beauty', 'Beauty & Clothing'), 
-                                                ('bills', 'Bills'), 
-                                                ('other', 'Other'), 
-                                                ('day2day', 'Day to day expenses'), 
-                                                ('healthcare', 'Healthcare')],
-                           validators=[Required()])
+    category = SelectField('category', validators=[Required()])
     note = TextField('note')
