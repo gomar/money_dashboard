@@ -26,6 +26,8 @@
 </style>
 {% endblock css %}
 {% block body %}
+	<h3>Add an {{ operationtype }}</h3>
+	<br>
 	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
 		{{ form.csrf_token }}
 		<!-- DATE -->
@@ -84,7 +86,7 @@
 		        {% endif %}
 		    </div>
 	    </div>
-        <button type="submit" class="pull-right btn btn-success">Add transaction</button>
+        <button type="submit" class="pull-right btn btn-success">Add {{ operationtype }}</button>
     </form>
 {% endblock body %}
 {% block javascript %}

@@ -64,8 +64,8 @@ def delete_transaction(transaction_id):
     return redirect('/')
 
 
-@app.route('/add_transaction', methods=['GET', 'POST'])
-def add_transaction():
+@app.route('/add_transaction/<operationtype>', methods=['GET', 'POST'])
+def add_expense(operationtype):
     form = forms.AddTransactionForm()
     if form.validate_on_submit():
     	u = models.Transaction(date=form.date.data,
@@ -76,5 +76,11 @@ def add_transaction():
     	db.session.add(u)
     	db.session.commit()
     	return redirect('/')
-    return render_template('add_transaction.html', form=form)
+    return render_template('add_transaction.html', 
+                           form=form, operationtype=operationtype)
+
+
+@app.route('/add_transaction', methods=['GET', 'POST'])
+def add_transaction_choice():
+    return render_template('add_transaction_choice.html')
 

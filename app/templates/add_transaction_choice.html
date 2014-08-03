@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block body %}
+	<h3>Choose the type of transaction to add</h3>
+	<br>
+	<div class="col-md-4 col-xs-4 col-md-offset-4 col-xs-offset-4">
+  		<div class="btn-group-vertical btn-block">
+  			<a href="/add_transaction/expense" class="btn btn-default" role="button">Expense</a>
+  			<a href="/add_transaction/income" class="btn btn-default" role="button">Income</a>
+		</div>
+	</div>
+{% endblock body %}
