@@ -13,8 +13,10 @@
 	    $(document).ready(function(){
 		    $('td:last-child').each(function(){
 		        var cellVal = parseFloat($(this).text())
-		        if(cellVal <= 0)
-		            $(this).addClass("danger");
+                if(cellVal <= 300)
+                    $(this).addClass("warning");
+                if(cellVal <= 0)
+                    $(this).addClass("danger");
 		    });
 		});
         $(document).on("click", ".confirmdelete", function(e) {

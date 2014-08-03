@@ -81,9 +81,13 @@ def add_expense(operationtype):
                                  ('other', 'Other income'),
                                  ('repayment', 'Miscellaneous repayment')]
     if form.validate_on_submit():
+        if operationtype == 'debit':
+            amount = -abs(float(form.amount.data))
+        elif operationtype == 'credit':
+            amount = abs(float(form.amount.data))
     	u = models.Transaction(date=form.date.data,
                                reconciled=False,
-    		                   amount=form.amount.data,
+    		                   amount=amount,
     		                   description=form.description.data,
     		                   category=form.category.data,
     		                   note=form.note.data)
