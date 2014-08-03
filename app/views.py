@@ -110,17 +110,17 @@ def add_expense(operationtype):
                            form=form, operationtype=operationtype)
 
 
-@app.route('/add_transaction', methods=['GET', 'POST'])
+@app.route('/add_transaction')
 def add_transaction_choice():
     return render_template('add_transaction_choice.html')
 
 
-@app.route('/graphs')
+@app.route('/graphs', methods=['GET', 'POST'])
 def display_graphs():
     data = pd.read_sql_table('transaction', db.engine)
 
     month = data['date'].map(lambda x: x.month)
-    data = data[month == datetime.datetime.now().month - 1]
+    data = data[month == datetime.datetime.now().month]
     data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2expense))
     data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2income))
 
@@ -142,10 +142,15 @@ def display_graphs():
     donutincomessum = credit.sum()['amount']
     donutincomes = donutincomes[:-1]
 
+    form = forms.SelectDateRangeForm()
+    if form.validate_on_submit():
+        redirect('/')
+
     return render_template('graphs.html',
                            donutexpenses=donutexpenses,
                            donutexpensessum=donutexpensessum,
                            donutincomes=donutincomes,
-                           donutincomessum=donutincomessum)
+                           donutincomessum=donutincomessum,
+                           form=form)
 
 

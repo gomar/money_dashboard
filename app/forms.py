@@ -10,3 +10,8 @@ class AddTransactionForm(Form):
     description = TextField('description', validators=[DataRequired(), length(max=20)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
+
+class SelectDateRangeForm(Form):
+    start = TextField('start', validators=[DataRequired()])
+    end = TextField('end', validators=[DataRequired()])
+
