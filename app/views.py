@@ -101,3 +101,28 @@ def add_expense(operationtype):
 def add_transaction_choice():
     return render_template('add_transaction_choice.html')
 
+
+@app.route('/graphs')
+def display_graphs():
+    data = pd.read_sql_table('transaction', db.engine)
+    debit = data[data['amount'] < 0][['category', 'amount']]
+    debit = debit.groupby('category').sum().abs()
+    debit = debit.sort('amount', ascending=False)
+    donutexpenses = ''
+    for cat in debit.index:
+        donutexpenses += '{label: "%s", value: %.2f},' % (cat, debit.ix[cat])
+    donutexpenses = donutexpenses[:-1]
+    
+    credit = data[data['amount'] >= 0][['category', 'amount']]
+    credit = credit.groupby('category').sum().abs()
+    credit = credit.sort('amount', ascending=False)
+    donutincomes = ''
+    for cat in credit.index:
+        donutincomes += '{label: "%s", value: %.2f},' % (cat, credit.ix[cat])
+    donutincomes = donutincomes[:-1]
+
+    return render_template('graphs.html',
+                           donutexpenses=donutexpenses,
+                           donutincomes=donutincomes)
+
+
