@@ -1,14 +1,3 @@
-# depenses
-childcare
-transport
-Entertainment & Leisure
-Beauty & Clothing
-Bills
-Other
-Day to day expenses
-Healthcare
-
-# revenus
-salaire
-remboursement divers
-autres revenus
+# TODO
+- dict for category to shoz the good category in summary
+- highlight first line of table

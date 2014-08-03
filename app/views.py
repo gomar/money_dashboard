@@ -13,7 +13,6 @@ def index():
     pd.set_option('display.max_colwidth', 1000)
 
     data[' '] = ('<div class="btn-group btn-group-xs">'
-                      '<a href="#" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>'
                       '<a href="/info_transaction/' + data['id'].astype(str) + 
                             '"class="btn btn-default transactioninfo" role="button"><i class="fa fa-info"></i></a>'
                       '<a href="/delete_transaction/' + data['id'].astype(str) + 
