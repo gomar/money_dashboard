@@ -1,3 +1,11 @@
 # TODO
-- dict for category to shoz the good category in summary
 - highlight first line of table
+- echeancier:
+	- description
+	- category
+	- next occurence
+	- repeat every
+	- ends: never, after:
+	- amount
+	RELATIVEDELTA DE CALENDAR
+- note que pour celles qui en ont

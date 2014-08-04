@@ -158,3 +158,9 @@ def display_graphs():
                            donutincomes=donutincomes,
                            donutincomessum=donutincomessum,
                            form=form)
+
+
+
+@app.route('/scheduled_transactions')
+def scheduled_transactions():
+    return render_template('scheduled_transactions.html')
