@@ -59,7 +59,7 @@ def index():
                  'out (<i class="fa fa-gbp"></i>)', 
                  'balance  (<i class="fa fa-gbp"></i>)']]
 
-    data = data.to_html(classes=['table table-hover table-bordered'], 
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
     return render_template('index.html', data=data)
 
@@ -68,16 +68,8 @@ def index():
 def info_transaction(transaction_id):
     data = pd.read_sql_table('transaction', db.engine)
     note = data[data['id'] == transaction_id]['note']
-    if len(note) != 0:
-        if note.iloc[0] == '':
-            note = 'No note'
-        else:
-            note = note.iloc[0]
-        return render_template('info_transaction.html', 
-                               note=note)
-    else:
-        return render_template('info_transaction.html', 
-                               note='No note')
+    return render_template('info_transaction.html', 
+                           note=note.iloc[0])
 
 
 @app.route('/delete_transaction/<int:transaction_id>')
@@ -115,7 +107,9 @@ def add_expense(operationtype):
 
 @app.route('/add_transaction')
 def add_transaction_choice():
-    return render_template('add_transaction_choice.html')
+    return render_template('add_transaction_choice.html',
+                           operationtype='transaction',
+                           path='add_transaction')
 
 
 @app.route('/graphs', methods=['GET', 'POST'])
@@ -166,4 +160,38 @@ def display_graphs():
 
 @app.route('/scheduled_transactions')
 def scheduled_transactions():
-    return render_template('scheduled_transactions.html')
+    scheduled_transactions = pd.read_sql_table('scheduled_transaction', 
+                                               db.engine).T.to_dict()
+    return render_template('scheduled_transactions.html', 
+                           scheduled_transactions=scheduled_transactions)
+
+
+@app.route('/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
+def add_scheduled_transaction(operationtype):
+    form = forms.AddTransactionForm()
+    if operationtype == 'debit':
+        form.category.choices = dict_key2expense.items()
+    elif operationtype == 'credit':
+        form.category.choices = dict_key2income.items()
+    if form.validate_on_submit():
+        if operationtype == 'debit':
+            amount = -abs(float(form.amount.data))
+        elif operationtype == 'credit':
+            amount = abs(float(form.amount.data))
+        u = models.ScheduledTransaction(next_occurence=form.date.data,
+                                        amount=amount,
+                                        description=form.description.data,
+                                        category=form.category.data,
+                                        note=form.note.data)
+        db.session.add(u)
+        db.session.commit()
+        return redirect('/scheduled_transactions')
+    return render_template('add_transaction.html', 
+                           form=form, operationtype='scheduled ' + operationtype)
+
+
+@app.route('/add_scheduled_transaction')
+def add_scheduled_transaction_choice():
+    return render_template('add_transaction_choice.html',
+                           operationtype='scheduled transaction',
+                           path='add_scheduled_transaction')

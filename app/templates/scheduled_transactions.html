@@ -1,53 +1,26 @@
 {% extends 'common/layout.html' %}
 {% block body %}
-	<div class="col-md-4">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-			    <h3 class="panel-title">Panel title</h3>
-			</div>
-			<div class="panel-body">
-			    Panel content
-			</div>
+	<div class="row">
+		<div class="col-md-12">
+			<H3>Scheduled transactions</H3>
+		</div>
+		<div class="col-md-6">
+			<a href="/add_scheduled_transaction" class="btn btn-success" role="button">Add a new scheduled transaction</a>
 		</div>
 	</div>
-	<div class="col-md-4">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-			    <h3 class="panel-title">Panel title</h3>
-			</div>
-			<div class="panel-body">
-			    Panel content
-			</div>
-		</div>
-	</div>
-	<div class="col-md-4">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-			    <h3 class="panel-title">Panel title</h3>
-			</div>
-			<div class="panel-body">
-			    Panel content
+	<br>
+	<div class="row">
+		{% for transaction in scheduled_transactions.values() %}
+		<div class="col-md-4">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+				    <h3 class="panel-title">{{ transaction.description }}</h3>
+				</div>
+				<div class="panel-body">
+					{{ transaction.amount }}
+				</div>
 			</div>
 		</div>
-	</div>
-	<div class="col-md-4">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-			    <h3 class="panel-title">Panel title</h3>
-			</div>
-			<div class="panel-body">
-			    Panel content
-			</div>
-		</div>
-	</div>
-	<div class="col-md-4">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-			    <h3 class="panel-title">Panel title</h3>
-			</div>
-			<div class="panel-body">
-			    Panel content
-			</div>
-		</div>
+		{% endfor %}
 	</div>
 {% endblock body %}
