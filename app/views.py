@@ -2,6 +2,7 @@ import os, datetime, calendar, time
 from flask import render_template, Flask, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 import pandas as pd
+import numpy as np
 import forms
 from app import app, db, models
 
@@ -31,12 +32,14 @@ def index():
 
     pd.set_option('display.max_colwidth', 1000)
 
-    data[' '] = ('<div class="btn-group btn-group-xs">'
-                      '<a href="/info_transaction/' + data['id'].astype(str) + 
-                            '"class="btn btn-default transactioninfo" role="button"><i class="fa fa-info"></i></a>'
-                      '<a href="/delete_transaction/' + data['id'].astype(str) + 
-                            '" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>'
-                      '</div>')
+    data[' '] = '<div class="btn-group btn-group-xs pull-right">'
+    data[' '] += np.where(data['note'] != '', 
+                          ('<a href="/info_transaction/' + data['id'].astype(str) + 
+                           '"class="btn btn-default transactioninfo" role="button"><i class="fa fa-info"></i></a>'),
+                          '')
+    data[' '] += ('<a href="/delete_transaction/' + data['id'].astype(str) + 
+                  '" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>'
+                  '</div>')
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
