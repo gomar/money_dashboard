@@ -17,3 +17,5 @@
 	- fa-heart fa-plus-square
 	- fa-question-circle
 	- fa-home
+- ajouter export csv par category quand graphes
+- multi compte -> compte liquide + transfert n'est pas considere comme depense

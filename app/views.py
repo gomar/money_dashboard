@@ -7,23 +7,15 @@ import forms
 from app import app, db, models
 
 
-dict_key2expense = {'child': 'Childcare', 
-                    'transport': 'Transport', 
-                    'leisure': 'Culture & Leisure', 
-                    'beauty': 'Beauty & Clothing', 
-                    'bills': 'Bills', 
-                    'other': 'Other', 
-                    'day2day': 'Day to day', 
-                    'healthcare': 'Healthcare'}
-dict_key2income = {'salary': 'Salary', 
-                   'other': 'Other income',
-                   'repayment': 'Misc. repayment'}
-
-
-def replace_all(text, dic):
-    for i, j in dic.iteritems():
-        text = text.replace(i, j)
-    return text
+list_category = ['Vehicle', 
+                 'Household Bills & Utilities', 
+                 'Home & Garden',
+                 'Day to Day',
+                 'Leisure & Holidays',
+                 'Clothing & Grooming', 
+                 'Healthcare',
+                 'Childcare & Education',
+                 'Salary']
 
 
 @app.route('/')
@@ -32,14 +24,20 @@ def index():
 
     pd.set_option('display.max_colwidth', 1000)
 
-    data[' '] = '<div class="btn-group btn-group-xs pull-right">'
+    data[' '] = '<div class="btn-toolbar pull-right" role="toolbar">'
     data[' '] += np.where(data['note'] != '', 
-                          ('<a href="/info_transaction/' + data['id'].astype(str) + 
-                           '"class="btn btn-default transactioninfo" role="button"><i class="fa fa-info"></i></a>'),
+                          ('<div class="btn-group btn-group-xs">'
+                           '<a href="/info_transaction/' + data['id'].astype(str) + 
+                           '"class="btn btn-info transactioninfo" role="button"><i class="fa fa-info"></i></a>'
+                           '</div>'),
                           '')
+    data[' '] += '<div class="btn-group btn-group-xs">'
+    data[' '] += ('<a href="/edit_transaction/' + data['id'].astype(str) + 
+                  '" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>')
     data[' '] += ('<a href="/delete_transaction/' + data['id'].astype(str) + 
                   '" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>'
                   '</div>')
+    data[' '] += '</div>'
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
@@ -49,9 +47,6 @@ def index():
     # replacing amount by in and out for easier reading
     data['in (<i class="fa fa-gbp"></i>)'] = data[data['amount'] >= 0]['amount']
     data['out (<i class="fa fa-gbp"></i>)'] = data[data['amount'] < 0]['amount']
-
-    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2expense))
-    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2income))
 
     # displaying the pandas data as an html table
     data = data[[' ', 'date', 'description', 'category', 
@@ -83,21 +78,29 @@ def delete_transaction(transaction_id):
 @app.route('/add_transaction/<operationtype>', methods=['GET', 'POST'])
 def add_expense(operationtype):
     form = forms.AddTransactionForm()
+
+    # adding an extra category depending on type of operation
     if operationtype == 'debit':
-        form.category.choices = dict_key2expense.items()
+        additional_category = 'Misc. Expense'
     elif operationtype == 'credit':
-        form.category.choices = dict_key2income.items()
+        additional_category = 'Misc. Income'
+    categories = list_category + [additional_category]
+    categories.sort()
+    form.category.choices = zip(categories, categories)
+
     if form.validate_on_submit():
         if operationtype == 'debit':
             amount = -abs(float(form.amount.data))
         elif operationtype == 'credit':
             amount = abs(float(form.amount.data))
+        # creating database entry
     	u = models.Transaction(date=form.date.data,
                                reconciled=False,
     		                   amount=amount,
     		                   description=form.description.data,
     		                   category=form.category.data,
     		                   note=form.note.data)
+        # adding to database
     	db.session.add(u)
     	db.session.commit()
     	return redirect('/')
@@ -112,11 +115,37 @@ def add_transaction_choice():
                            path='add_transaction')
 
 
+@app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
+def edit_transaction(transaction_id):
+    form = forms.AddTransactionForm()
+    categories = list_category + ['Misc. Expense', 'Misc. Income']
+    categories.sort()
+    form.category.choices = zip(categories, categories)
+    # getting the transaction element
+    transaction = models.Transaction.query.get(transaction_id)
+    reconciled = transaction.reconciled and True
+    if form.validate_on_submit():
+        # update the rssfeed column
+        transaction.date = form.date.data
+        transaction.reconciled = reconciled
+        transaction.amount = form.amount.data
+        transaction.description = form.description.data
+        transaction.category = form.category.data
+        transaction.note = form.note.data
+        db.session.commit()
+        return redirect('/')
+    else:
+        form.date.data = transaction.date
+        form.amount.data = '%.2f' % transaction.amount
+        form.description.data = transaction.description
+        form.category.data = transaction.category
+        form.note.data = transaction.note
+    return render_template('edit_transaction.html', form=form)
+
+
 @app.route('/graphs', methods=['GET', 'POST'])
 def display_graphs():
     data = pd.read_sql_table('transaction', db.engine)
-    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2expense))
-    data['category'] = data['category'].map(lambda x: replace_all(x, dict_key2income))
 
     def compute(data, start_day, end_day):
         data = data[(data['date'] >= start_day) & (data['date'] <= end_day)]
