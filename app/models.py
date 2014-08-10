@@ -9,6 +9,7 @@ class Transaction(db.Model):
     description = db.Column(db.Text)
     category = db.Column(db.Text)
     note = db.Column(db.Text)
+    account = db.Column(db.Text)
 
     def __repr__(self):
         return '<id %r>' % self.id
