@@ -41,39 +41,7 @@
 {% endblock body %}
 {% block javascript %}
 <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
-<script src="http://cdn.oesmith.co.uk/morris-0.4.1.min.js"></script>
 <script type="text/javascript">
-new Morris.Donut({
-  element: 'donut-expenses',
-  data: [ {{ donutexpenses | safe }}
-  ],
-  formatter: function (y, data) { 
-  	return Math.floor(y) + ' (' + Math.floor(100 * y / {{ donutexpensessum | safe }}) + '%)'},
-  colors: [
-	'#2C3E50',
-	'#18BC9C',
-	'#3498DB',
-	'#F39C12',
-	'#E74C3C',
-	'#7b8a8b',
-	'#95a5a6']
-});
-new Morris.Donut({
-  element: 'donut-incomes',
-  data: [ {{ donutincomes | safe }}
-  ],
-  formatter: function (y, data) { 
-  	return Math.floor(y) + ' (' + Math.floor(100 * y / {{ donutincomessum | safe }}) + '%)'},
-  colors: [
-	'#2C3E50',
-	'#18BC9C',
-	'#3498DB',
-	'#F39C12',
-	'#E74C3C',
-	'#7b8a8b',
-	'#95a5a6']
-});
 $('.input-daterange').datepicker({
     keyboardNavigation: false,
     forceParse: false,
