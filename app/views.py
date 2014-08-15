@@ -198,20 +198,29 @@ def scheduled_transactions():
 @app.route('/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
 def add_scheduled_transaction(operationtype):
     form = forms.AddTransactionForm()
+    form.date.label = 'next occurence'
+
+    # adding an extra category depending on type of operation
     if operationtype == 'debit':
-        form.category.choices = dict_key2expense.items()
+        additional_category = 'Misc. Expense'
     elif operationtype == 'credit':
-        form.category.choices = dict_key2income.items()
+        additional_category = 'Misc. Income'
+    categories = list_category + [additional_category]
+    categories.sort()
+    form.category.choices = zip(categories, categories)
+
     if form.validate_on_submit():
         if operationtype == 'debit':
             amount = -abs(float(form.amount.data))
         elif operationtype == 'credit':
             amount = abs(float(form.amount.data))
+        # creating database entry
         u = models.ScheduledTransaction(next_occurence=form.date.data,
                                         amount=amount,
                                         description=form.description.data,
                                         category=form.category.data,
                                         note=form.note.data)
+        # adding to database
         db.session.add(u)
         db.session.commit()
         return redirect('/scheduled_transactions')
