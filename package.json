@@ -1,0 +1,17 @@
+{
+    "name": "title",
+    "description": "description",
+    "version": "0.1",
+    "main": "http://127.0.0.1:5000/",
+    "node-remote": "http://127.0.0.1:5000/",
+    "window": {
+        "show": true,
+        "toolbar": false,
+        "frame": true,
+        "position": "center",
+        "width": 800,
+        "height": 600,
+        "min_width": 220,
+        "min_height": 220
+    }
+}
