@@ -1,26 +1,24 @@
 {% extends 'common/layout.html' %}
 {% block body %}
-	<div class="row">
-		<div class="col-md-12">
-			<H3>Scheduled transactions</H3>
+	<div class="page-header">
+		<h3>Scheduled transactions</h3>
+	</div>
+	{% for transaction in scheduled_transactions.values() %}
+	<div class="panel {% if transaction.amount > 0 %}panel-success{% else %}panel-danger{% endif %}">
+		<div class="panel-heading">
+		    <h3 class="panel-title">{{ transaction.description }}</h3>
 		</div>
-		<div class="col-md-6">
-			<a href="/add_scheduled_transaction" class="btn btn-success" role="button">Add a new scheduled transaction</a>
+		<div class="panel-body">
+			<div class="row">
+		      <div class="col-xs-4">
+		        amount:
+		      </div>
+		      <div class="col-xs-8">
+		        {{ transaction.amount }}
+		      </div>
+		    </div>
+			
 		</div>
 	</div>
-	<br>
-	<div class="row">
-		{% for transaction in scheduled_transactions.values() %}
-		<div class="col-md-4">
-			<div class="panel panel-primary">
-				<div class="panel-heading">
-				    <h3 class="panel-title">{{ transaction.description }}</h3>
-				</div>
-				<div class="panel-body">
-					{{ transaction.amount }}
-				</div>
-			</div>
-		</div>
-		{% endfor %}
-	</div>
+	{% endfor %}
 {% endblock body %}
