@@ -19,4 +19,3 @@
 	- fa-home
 - ajouter export csv par category quand graphes
 - multi compte -> compte liquide + transfert n'est pas considere comme depense
-- db.session.query(models.Transaction).distinct(models.Transaction.account).group_by(models.Transaction.account).all() to show all the accounts

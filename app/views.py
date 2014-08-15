@@ -17,22 +17,10 @@ list_category = ['Vehicle',
                  'Childcare & Education',
                  'Salary']
 
-list_account = [value.account for value in db.session.query(models.Transaction)\
-                                                     .distinct(models.Transaction.account)\
-                                                     .group_by(models.Transaction.account).all()]
-
-
 
 @app.route('/')
 def index():
-    return redirect('/graphs')
-
-
-@app.route('/summary_transaction/<cur_account>')
-def summary_transaction(cur_account):
-    sql_query = "SELECT * FROM transaction WHERE account = '%s';" % cur_account.replace('_', ' ')
-
-    data = pd.read_sql_query(sql_query, db.engine)
+    data = pd.read_sql_table('transaction', db.engine)
 
     pd.set_option('display.max_colwidth', 1000)
 
@@ -68,7 +56,7 @@ def summary_transaction(cur_account):
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
-    return render_template('index.html', data=data, list_account=list_account)
+    return render_template('index.html', data=data)
 
 
 @app.route('/info_transaction/<int:transaction_id>')
@@ -76,8 +64,7 @@ def info_transaction(transaction_id):
     data = pd.read_sql_table('transaction', db.engine)
     note = data[data['id'] == transaction_id]['note']
     return render_template('info_transaction.html', 
-                           note=note.iloc[0],
-                           list_account=list_account)
+                           note=note.iloc[0])
 
 
 @app.route('/delete_transaction/<int:transaction_id>')
@@ -118,16 +105,14 @@ def add_expense(operationtype):
     	db.session.commit()
     	return redirect('/')
     return render_template('add_transaction.html', 
-                           form=form, operationtype=operationtype,
-                           list_account=list_account)
+                           form=form, operationtype=operationtype)
 
 
 @app.route('/add_transaction')
 def add_transaction_choice():
     return render_template('add_transaction_choice.html',
                            operationtype='transaction',
-                           path='add_transaction',
-                           list_account=list_account)
+                           path='add_transaction')
 
 
 @app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
@@ -155,8 +140,7 @@ def edit_transaction(transaction_id):
         form.description.data = transaction.description
         form.category.data = transaction.category
         form.note.data = transaction.note
-    return render_template('edit_transaction.html', form=form,
-                           list_account=list_account)
+    return render_template('edit_transaction.html', form=form)
 
 
 @app.route('/graphs', methods=['GET', 'POST'])
@@ -199,8 +183,7 @@ def display_graphs():
                            donutexpensessum=donutexpensessum,
                            donutincomes=donutincomes,
                            donutincomessum=donutincomessum,
-                           form=form,
-                           list_account=list_account)
+                           form=form)
 
 
 
@@ -209,8 +192,7 @@ def scheduled_transactions():
     scheduled_transactions = pd.read_sql_table('scheduled_transaction', 
                                                db.engine).T.to_dict()
     return render_template('scheduled_transactions.html', 
-                           scheduled_transactions=scheduled_transactions,
-                           list_account=list_account)
+                           scheduled_transactions=scheduled_transactions)
 
 
 @app.route('/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
@@ -234,13 +216,11 @@ def add_scheduled_transaction(operationtype):
         db.session.commit()
         return redirect('/scheduled_transactions')
     return render_template('add_transaction.html', 
-                           form=form, operationtype='scheduled ' + operationtype,
-                           list_account=list_account)
+                           form=form, operationtype='scheduled ' + operationtype)
 
 
 @app.route('/add_scheduled_transaction')
 def add_scheduled_transaction_choice():
     return render_template('add_transaction_choice.html',
                            operationtype='scheduled transaction',
-                           path='add_scheduled_transaction',
-                           list_account=list_account)
+                           path='add_scheduled_transaction')

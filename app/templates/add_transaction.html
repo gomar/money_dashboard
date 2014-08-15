@@ -26,9 +26,8 @@
 </style>
 {% endblock css %}
 {% block body %}
-	<div class="page-header">
-      <h3>Add a {{ operationtype }}</h3>
-    </div>
+	<h3>Add a {{ operationtype }}</h3>
+	<br>
 	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
 		{{ form.csrf_token }}
 		<!-- DATE -->
