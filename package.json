@@ -1,0 +1,14 @@
+{
+    "name": "Woney",
+    "title": "Woney",
+    "main": "http://127.0.0.1:5000/",
+    "node-remote": "*",
+    "window": {
+        "width": 1200,
+        "height": 700,
+        "show": true,
+        "toolbar": false,
+        "frame": true,
+        "position": "center"
+    }
+}
