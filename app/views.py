@@ -65,7 +65,7 @@ def index():
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
-    return render_template('index.html', data=data, **context)
+    return render_template('transactions.html', data=data, **context)
 
 
 @app.route('/info_transaction/<int:transaction_id>')
