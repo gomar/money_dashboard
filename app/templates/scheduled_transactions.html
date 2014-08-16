@@ -3,21 +3,34 @@
 	<div class="page-header">
 		<h3>Scheduled transactions</h3>
 	</div>
-	{% for transaction in scheduled_transactions.values() %}
-	<div class="panel {% if transaction.amount > 0 %}panel-success{% else %}panel-danger{% endif %}">
-		<div class="panel-heading">
-		    <h3 class="panel-title">{{ transaction.description }}</h3>
-		</div>
-		<div class="panel-body">
-			<div class="row">
-		      <div class="col-xs-4">
-		        amount:
-		      </div>
-		      <div class="col-xs-8">
-		        {{ transaction.amount }}
-		      </div>
-		    </div>
-			
+	{% for transaction in scheduled_transactions %}
+	<div class="col-sm-6">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+			    <h3 class="panel-title">{% if transaction.next_occurence <= now %} <i class="fa fa-exclamation-triangle"></i>{% endif %} {{ transaction.description }}</h3>
+			</div>
+			<div class="panel-body">
+			    <!-- next occurence -->
+			    <div class="row">
+			      <div class="col-sm-4 text-right">
+			        <small><strong>next occurence</strong></small>
+			      </div>
+			      <div class="col-sm-8">
+			          {{ transaction.next_occurence.strftime('%d/%m/%Y') }}
+			      </div>
+			    </div>
+			    <!-- amount -->
+				<div class="row">
+			      <div class="col-sm-4 text-right">
+			        <small><strong>amount</strong></small>
+			      </div>
+			      <div class="col-sm-8">
+			      	<span class="label label-{% if transaction.amount > 0 %}success{% else %}danger{% endif %}">
+			          {{ transaction.amount }}
+			      	</span>
+			      </div>
+				</div>
+			</div>
 		</div>
 	</div>
 	{% endfor %}

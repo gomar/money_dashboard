@@ -4,7 +4,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 import pandas as pd
 import numpy as np
 import forms
-from app import app, db, models
+from app import app, db, models, utils
 
 
 list_category = ['Vehicle', 
@@ -15,8 +15,13 @@ list_category = ['Vehicle',
                  'Clothing & Grooming', 
                  'Healthcare',
                  'Childcare & Education',
-                 'Salary']
+                 'Salary',
+                 'Tax']
 
+context = {'now': datetime.datetime.now(),
+           'waiting_scheduled_transactions': models.ScheduledTransaction.query\
+                .filter(models.ScheduledTransaction.next_occurence
+                        <= datetime.datetime.now()).count()}
 
 @app.route('/')
 def index():
@@ -56,7 +61,7 @@ def index():
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
-    return render_template('index.html', data=data)
+    return render_template('index.html', data=data, **context)
 
 
 @app.route('/info_transaction/<int:transaction_id>')
@@ -64,7 +69,8 @@ def info_transaction(transaction_id):
     data = pd.read_sql_table('transaction', db.engine)
     note = data[data['id'] == transaction_id]['note']
     return render_template('info_transaction.html', 
-                           note=note.iloc[0])
+                           note=note.iloc[0],
+                           **context)
 
 
 @app.route('/delete_transaction/<int:transaction_id>')
@@ -94,25 +100,27 @@ def add_expense(operationtype):
         elif operationtype == 'credit':
             amount = abs(float(form.amount.data))
         # creating database entry
-    	u = models.Transaction(date=form.date.data,
+        u = models.Transaction(date=form.date.data,
                                reconciled=False,
-    		                   amount=amount,
-    		                   description=form.description.data,
-    		                   category=form.category.data,
-    		                   note=form.note.data)
+                               amount=amount,
+                               description=form.description.data,
+                               category=form.category.data,
+                               note=form.note.data)
         # adding to database
-    	db.session.add(u)
-    	db.session.commit()
-    	return redirect('/')
+        db.session.add(u)
+        db.session.commit()
+        return redirect('/')
     return render_template('add_transaction.html', 
-                           form=form, operationtype=operationtype)
+                           form=form, operationtype=operationtype,
+                           **context)
 
 
 @app.route('/add_transaction')
 def add_transaction_choice():
     return render_template('add_transaction_choice.html',
                            operationtype='transaction',
-                           path='add_transaction')
+                           path='add_transaction',
+                           **context)
 
 
 @app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
@@ -140,7 +148,9 @@ def edit_transaction(transaction_id):
         form.description.data = transaction.description
         form.category.data = transaction.category
         form.note.data = transaction.note
-    return render_template('edit_transaction.html', form=form)
+    return render_template('edit_transaction.html', 
+                           form=form,
+                           **context)
 
 
 @app.route('/graphs', methods=['GET', 'POST'])
@@ -183,16 +193,22 @@ def display_graphs():
                            donutexpensessum=donutexpensessum,
                            donutincomes=donutincomes,
                            donutincomessum=donutincomessum,
-                           form=form)
+                           form=form,
+                           **context)
 
 
 
 @app.route('/scheduled_transactions')
 def scheduled_transactions():
-    scheduled_transactions = pd.read_sql_table('scheduled_transaction', 
-                                               db.engine).T.to_dict()
+    df = pd.read_sql_table('scheduled_transaction', db.engine)
+    pd.to_datetime(df['next_occurence'])
+    df = df.sort('next_occurence')
+    df = pd.DataFrame(df.values, columns=df.columns)
+    df_dict = df.T.to_dict()
+    scheduled_transactions = [df_dict[i] for i in range(len(df_dict))]
     return render_template('scheduled_transactions.html', 
-                           scheduled_transactions=scheduled_transactions)
+                           scheduled_transactions=scheduled_transactions,
+                           **context)
 
 
 @app.route('/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
@@ -225,11 +241,14 @@ def add_scheduled_transaction(operationtype):
         db.session.commit()
         return redirect('/scheduled_transactions')
     return render_template('add_transaction.html', 
-                           form=form, operationtype='scheduled ' + operationtype)
+                           form=form, 
+                           operationtype='scheduled ' + operationtype,
+                           **context)
 
 
 @app.route('/add_scheduled_transaction')
 def add_scheduled_transaction_choice():
     return render_template('add_transaction_choice.html',
                            operationtype='scheduled transaction',
-                           path='add_scheduled_transaction')
+                           path='add_scheduled_transaction',
+                           **context)
