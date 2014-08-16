@@ -18,10 +18,14 @@ list_category = ['Vehicle',
                  'Salary',
                  'Tax']
 
-context = {'now': datetime.datetime.now(),
-           'waiting_scheduled_transactions': models.ScheduledTransaction.query\
+def update_waiting_scheduled_transactions():
+    return models.ScheduledTransaction.query\
                 .filter(models.ScheduledTransaction.next_occurence
-                        <= datetime.datetime.now()).count()}
+                        <= datetime.datetime.now()).count()
+
+global context
+context = {'now': datetime.datetime.now(),
+           'waiting_scheduled_transactions': update_waiting_scheduled_transactions()}
 
 @app.route('/')
 def index():
@@ -211,6 +215,15 @@ def scheduled_transactions():
                            **context)
 
 
+@app.route('/delete_scheduled_transaction/<int:transaction_id>')
+def delete_scheduled_transaction(transaction_id):
+    transaction = models.ScheduledTransaction.query.get(transaction_id)
+    db.session.delete(transaction)
+    db.session.commit()
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+    return redirect('/scheduled_transactions')
+
+
 @app.route('/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
 def add_scheduled_transaction(operationtype):
     form = forms.AddTransactionForm()
@@ -239,6 +252,8 @@ def add_scheduled_transaction(operationtype):
         # adding to database
         db.session.add(u)
         db.session.commit()
+        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+
         return redirect('/scheduled_transactions')
     return render_template('add_transaction.html', 
                            form=form, 

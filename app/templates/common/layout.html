@@ -46,8 +46,10 @@
                 <li><a href="/add_transaction"><i class="fa fa-plus"></i></a></li>
                 <li class="dropdown">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                      <i class="fa fa-clock-o"></i> 
+                      <i class="fa fa-clock-o"></i>
+                      {% if waiting_scheduled_transactions > 0 %}
                       <sup><span class="label label-danger">{{ waiting_scheduled_transactions }}</span></sup>
+                      {% endif %}
                       <span class="caret"></span>
                   </a>
                   <ul class="dropdown-menu" role="menu">
