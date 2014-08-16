@@ -267,3 +267,7 @@ def add_scheduled_transaction_choice():
                            operationtype='scheduled transaction',
                            path='add_scheduled_transaction',
                            **context)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', **context), 404
