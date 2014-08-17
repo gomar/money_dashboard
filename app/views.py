@@ -82,11 +82,11 @@ def delete_transaction(transaction_id):
     transaction = models.Transaction.query.get(transaction_id)
     db.session.delete(transaction)
     db.session.commit()
-    return redirect('/')
+    return redirect('/transactions')
 
 
 @app.route('/add_transaction/<operationtype>', methods=['GET', 'POST'])
-def add_expense(operationtype):
+def add_transaction(operationtype):
     form = forms.AddTransactionForm()
 
     # adding an extra category depending on type of operation
@@ -113,7 +113,7 @@ def add_expense(operationtype):
         # adding to database
         db.session.add(u)
         db.session.commit()
-        return redirect('/')
+        return redirect('/transactions')
     return render_template('add_transaction.html', 
                            form=form, operationtype=operationtype,
                            **context)
@@ -137,7 +137,7 @@ def edit_transaction(transaction_id):
         transaction.category = form.category.data
         transaction.note = form.note.data
         db.session.commit()
-        return redirect('/')
+        return redirect('/transactions')
     else:
         form.date.data = transaction.date
         form.amount.data = '%.2f' % transaction.amount
