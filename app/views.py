@@ -19,9 +19,12 @@ list_category = ['Vehicle',
                  'Tax']
 
 def update_waiting_scheduled_transactions():
-    return models.ScheduledTransaction.query\
-                .filter(models.ScheduledTransaction.next_occurence
-                        <= datetime.datetime.now()).count()
+    if os.path.exists(app.config['DB_FNAME']):
+        return models.ScheduledTransaction.query\
+                    .filter(models.ScheduledTransaction.next_occurence
+                            <= datetime.datetime.now()).count()
+    else:
+        return 0
 
 global context
 context = {'now': datetime.datetime.now(),
@@ -105,7 +108,6 @@ def add_transaction(operationtype):
             amount = abs(float(form.amount.data))
         # creating database entry
         u = models.Transaction(date=form.date.data,
-                               reconciled=False,
                                amount=amount,
                                description=form.description.data,
                                category=form.category.data,
@@ -127,11 +129,9 @@ def edit_transaction(transaction_id):
     form.category.choices = zip(categories, categories)
     # getting the transaction element
     transaction = models.Transaction.query.get(transaction_id)
-    reconciled = transaction.reconciled and True
     if form.validate_on_submit():
         # update the rssfeed column
         transaction.date = form.date.data
-        transaction.reconciled = reconciled
         transaction.amount = form.amount.data
         transaction.description = form.description.data
         transaction.category = form.category.data
@@ -258,7 +258,6 @@ def add_scheduled_transaction(operationtype):
 def create_scheduled_transaction(transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     u = models.Transaction(date=s_transaction.next_occurence,
-                           reconciled=False,
                            amount=s_transaction.amount,
                            description=s_transaction.description,
                            category=s_transaction.category,
