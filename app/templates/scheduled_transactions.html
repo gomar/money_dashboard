@@ -4,7 +4,7 @@
 {% endblock %}
 {% block body %}
 	<div class="page-header">
-		<h3>Scheduled transactions &nbsp;&nbsp;<a href="/add_scheduled_transaction" class="btn btn-primary btn-xs" role="button"><i class="fa fa-plus"></i></a></h3>
+		<h3>Scheduled transactions &nbsp;&nbsp;<a href="/add_scheduled_transaction" class="btn btn-info btn-xs" role="button"><i class="fa fa-plus"></i></a></h3>
 	</div>
 	{% for transaction in scheduled_transactions %}
 	<div class="col-sm-6">
@@ -33,10 +33,12 @@
 			        <small><strong>amount</strong></small>
 			      </div>
 			      <div class="col-sm-8">
-			      	<span class="label label-{% if transaction.amount > 0 %}success{% else %}danger{% endif %}">
-			          {{ transaction.amount }} &nbsp;<i class="fa fa-gbp"></i>
-			      	</span>
+			      	  {{ "%.2f"| format(transaction.amount) }} &nbsp;<i class="fa fa-gbp"></i>
 			      </div>
+				</div>
+				<div class="btn-group btn-group-xs pull-right">
+					<a href="/create_scheduled_transaction/{{ transaction.id }}" class="btn btn-info" role="button">create</a>
+					<a href="/skip_scheduled_transaction/{{ transaction.id }}" class="btn btn-default" role="button">skip</a>
 				</div>
 			</div>
 		</div>
