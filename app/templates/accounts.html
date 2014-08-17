@@ -1,3 +1,45 @@
 {% extends 'common/layout.html' %}
 {% block body %}
+    <div class="page-header">
+        <h3>Accounts &nbsp;&nbsp;
+            <a href="/add_account" class="btn btn btn-info btn-xs" role="button">
+                <i class="fa fa-plus"></i>
+            </a>
+        </h3>
+    </div>
+    {% for account in accounts.values() %}
+	<div class="col-sm-6">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+			    <h3 class="panel-title">{{ account.name }}
+			   	<div class="btn-toolbar pull-right" role="toolbar">
+			    	<div class="btn-group btn-group-xs">
+						<a href="/account/{{ account.id }}/transactions" class="btn btn-primary" role="button">select</a>
+					</div>
+				</div>
+				</h3>
+			</div>
+			<div class="panel-body">
+			    <!-- current balance -->
+			    <div class="row">
+			      <div class="col-sm-6 text-right">
+			        <small><strong>current balance</strong></small>
+			      </div>
+			      <div class="col-sm-6">
+			          2147 &nbsp;<i class="fa fa-{{account.currency}}"></i>
+			      </div>
+			    </div>
+			    <!-- predicted balance -->
+			    <div class="row">
+			      <div class="col-sm-6 text-right">
+			        <small><strong>end of month balance</strong></small>
+			      </div>
+			      <div class="col-sm-6">
+			          236 &nbsp;<i class="fa fa-{{account.currency}}"></i>
+			      </div>
+			    </div>
+			</div>
+		</div>
+	</div>
+	{% endfor %}
 {% endblock %}

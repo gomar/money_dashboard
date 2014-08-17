@@ -1,0 +1,61 @@
+{% extends 'common/layout.html' %}
+{% import 'common/form_macros.html' as macros %}
+{% block css %}
+<link href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}" rel="stylesheet">
+<style type="text/css">
+	.btn-custom { 
+		background-color: #ffffff;
+		background-image: none;
+		border: 1px solid #dce4ec;
+		border-radius: 3px;
+		border-width: 2px;
+		-webkit-box-shadow: none;
+		box-shadow: none;
+  	}
+  	.btn-custom:hover {
+  		color: inherit;
+  	}
+  	.btn-custom:focus,
+	.btn-custom:active:focus,
+	.btn-custom.active:focus {
+  		color: inherit;
+  border-color: #2c3e50;
+  outline: 0;
+  	}
+</style>
+{% endblock css %}
+{% block body %}
+	<div class="page-header">
+		<h3>Add an account</h3>
+	</div>
+	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
+		{{ form.csrf_token }}
+		<!-- DESCRIPTION -->
+	   	<div class="form-group {% if form.name.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.name.label }}</label>
+	        <div class="col-md-10">
+	        	{{ form.name(class_='form-control') }}
+		        {% if form.name.errors %}
+		            {% for e in form.name.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- CATEGORY -->
+	   	<div class="form-group">
+	        <label class="control-label col-md-2">{{ form.currency.label }}</label>
+	        	{{ form.currency(class_='selectpicker col-md-10') }}
+	    </div>
+	   	<!-- NOTE -->
+        <button type="submit" class="pull-right btn btn-info">Add account</button>
+    </form>
+{% endblock body %}
+{% block javascript %}
+<script src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
+<script type="text/javascript">
+$('.selectpicker').selectpicker({
+      style: 'btn-custom'  
+});
+</script>
+{% endblock javascript %}

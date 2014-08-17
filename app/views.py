@@ -18,6 +18,9 @@ list_category = ['Vehicle',
                  'Salary',
                  'Tax']
 
+list_currency = [('euro', 'Euro'), ('gbp', 'Pound sterling'), ('usd', 'US dollar')]
+
+
 def update_waiting_scheduled_transactions():
     if os.path.exists(app.config['DB_FNAME']):
         return models.ScheduledTransaction.query\
@@ -26,13 +29,44 @@ def update_waiting_scheduled_transactions():
     else:
         return 0
 
+
 global context
 context = {'now': datetime.datetime.now(),
            'waiting_scheduled_transactions': update_waiting_scheduled_transactions()}
 
-@app.route('/transactions')
-def index():
+
+@app.route('/accounts')
+def home():
+    accounts = pd.read_sql_table('account', db.engine)
+    return render_template('accounts.html', 
+                           accounts=accounts.T.to_dict(),
+                           **context)
+
+
+@app.route('/add_account', methods=['GET', 'POST'])
+def add_account():
+    form = forms.AddAccount()
+    form.currency.choices = list_currency
+
+    if form.validate_on_submit():
+        # creating database entry
+        u = models.Account(name=form.name.data,
+                           currency=form.currency.data)
+        # adding to database
+        db.session.add(u)
+        db.session.commit()
+        return redirect('/accounts')
+
+    return render_template('add_account.html',
+                           form=form,
+                           **context)
+
+
+@app.route('/account/<int:account_id>/transactions')
+def transactions(account_id):
+    account = models.Account.query.get(account_id)
     data = pd.read_sql_table('transaction', db.engine)
+    data = data[data['account'] == account.name]
 
     pd.set_option('display.max_colwidth', 1000)
 
@@ -85,11 +119,14 @@ def delete_transaction(transaction_id):
     transaction = models.Transaction.query.get(transaction_id)
     db.session.delete(transaction)
     db.session.commit()
-    return redirect('/transactions')
+    account_id = models.Account.query\
+            .filter(models.Account.name == transaction.account).all()[0].id
+    return redirect('/account/%d/transactions' % account_id)
 
 
-@app.route('/add_transaction/<operationtype>', methods=['GET', 'POST'])
-def add_transaction(operationtype):
+@app.route('/account/<int:account_id>/add_transaction/<operationtype>', methods=['GET', 'POST'])
+def add_transaction(account_id, operationtype):
+    account = models.Account.query.get(account_id)
     form = forms.AddTransactionForm()
 
     # adding an extra category depending on type of operation
@@ -108,6 +145,7 @@ def add_transaction(operationtype):
             amount = abs(float(form.amount.data))
         # creating database entry
         u = models.Transaction(date=form.date.data,
+                               account=account.name,
                                amount=amount,
                                description=form.description.data,
                                category=form.category.data,
@@ -115,7 +153,7 @@ def add_transaction(operationtype):
         # adding to database
         db.session.add(u)
         db.session.commit()
-        return redirect('/transactions')
+        return redirect('/account/%d/transactions' % account_id)
     return render_template('add_transaction.html', 
                            form=form, operationtype=operationtype,
                            **context)
@@ -137,7 +175,9 @@ def edit_transaction(transaction_id):
         transaction.category = form.category.data
         transaction.note = form.note.data
         db.session.commit()
-        return redirect('/transactions')
+        account_id = models.Account.query\
+            .filter(models.Account.name == transaction.account).all()[0].id
+        return redirect('/account/%d/transactions' % account_id)
     else:
         form.date.data = transaction.date
         form.amount.data = '%.2f' % transaction.amount

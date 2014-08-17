@@ -15,3 +15,7 @@ class SelectDateRangeForm(Form):
     start = TextField('start', validators=[DataRequired()])
     end = TextField('end', validators=[DataRequired()])
 
+class AddAccount(Form):
+    name = TextField('name', validators=[DataRequired()])
+    currency = SelectField('currency', 
+                           validators=[DataRequired()])
