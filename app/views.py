@@ -1,4 +1,4 @@
-import os, datetime, calendar, time
+import os, datetime, calendar, time, dateutil
 from flask import render_template, Flask, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 import pandas as pd
@@ -251,6 +251,32 @@ def add_scheduled_transaction(operationtype):
                            form=form, 
                            operationtype='scheduled ' + operationtype,
                            **context)
+
+
+@app.route('/create_scheduled_transaction/<int:transaction_id>')
+def create_scheduled_transaction(transaction_id):
+    s_transaction = models.ScheduledTransaction.query.get(transaction_id)
+    u = models.Transaction(date=s_transaction.next_occurence,
+                           reconciled=False,
+                           amount=s_transaction.amount,
+                           description=s_transaction.description,
+                           category=s_transaction.category,
+                           note=s_transaction.note)
+    # adding new transaction to database
+    db.session.add(u)
+    s_transaction.next_occurence = s_transaction.next_occurence + dateutil.relativedelta.relativedelta(months=1)
+    db.session.commit()
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+    return redirect('/scheduled_transactions')
+
+
+@app.route('/skip_scheduled_transaction/<int:transaction_id>')
+def skip_scheduled_transaction(transaction_id):
+    s_transaction = models.ScheduledTransaction.query.get(transaction_id)
+    s_transaction.next_occurence = s_transaction.next_occurence + dateutil.relativedelta.relativedelta(months=1)
+    db.session.commit()
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+    return redirect('/scheduled_transactions')
 
 
 @app.errorhandler(404)
