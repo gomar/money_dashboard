@@ -27,7 +27,7 @@
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>Edit transaction</h3>
+		<h3>Edit {{ operationtype }}</h3>
 	</div>
 	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
 		{{ form.csrf_token }}
@@ -88,8 +88,8 @@
 		    </div>
 	    </div>
 	    <div class="btn-group pull-right">
-	    	<a href="/" class="btn btn-default" role="button">Cancel</a>
-			<button type="submit" class="btn btn-success">Edit transaction</button>
+	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
+			<button type="submit" class="btn btn-success">Edit {{ operationtype }}</button>
 		</div>
     </form>
 {% endblock body %}

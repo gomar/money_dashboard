@@ -27,7 +27,7 @@ global context
 context = {'now': datetime.datetime.now(),
            'waiting_scheduled_transactions': update_waiting_scheduled_transactions()}
 
-@app.route('/')
+@app.route('/transactions')
 def index():
     data = pd.read_sql_table('transaction', db.engine)
 
@@ -145,6 +145,7 @@ def edit_transaction(transaction_id):
         form.category.data = transaction.category
         form.note.data = transaction.note
     return render_template('edit_transaction.html', 
+                           operationtype='transaction',
                            form=form,
                            **context)
 
@@ -285,6 +286,37 @@ def info_scheduled_transaction(transaction_id):
     note = data[data['id'] == transaction_id]['note']
     return render_template('info_transaction.html', 
                            note=note.iloc[0],
+                           **context)
+
+
+@app.route('/edit_scheduled_transaction/<int:transaction_id>', methods=['GET', 'POST'])
+def edit_scheduled_transaction(transaction_id):
+    form = forms.AddTransactionForm()
+    form.date.label = 'next occurence'
+    categories = list_category + ['Misc. Expense', 'Misc. Income']
+    categories.sort()
+    form.category.choices = zip(categories, categories)
+    # getting the transaction element
+    transaction = models.ScheduledTransaction.query.get(transaction_id)
+    if form.validate_on_submit():
+        # update the rssfeed column
+        transaction.next_occurence = form.date.data
+        transaction.amount = form.amount.data
+        transaction.description = form.description.data
+        transaction.category = form.category.data
+        transaction.note = form.note.data
+        db.session.commit()
+        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+        return redirect('/scheduled_transactions')
+    else:
+        form.date.data = transaction.next_occurence
+        form.amount.data = '%.2f' % transaction.amount
+        form.description.data = transaction.description
+        form.category.data = transaction.category
+        form.note.data = transaction.note
+    return render_template('edit_transaction.html',
+                           operationtype='scheduled transaction',
+                           form=form,
                            **context)
 
 
