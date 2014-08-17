@@ -4,7 +4,30 @@
 {% endblock %}
 {% block body %}
     <div class="page-header">
-        <h3>Transactions &nbsp;&nbsp;<a href="/add_transaction" class="btn btn-info btn-xs" role="button"><i class="fa fa-plus"></i></a></h3>
+        <h3>Transactions &nbsp;&nbsp;
+        <div class="btn-group">
+          <button type="button" class="btn btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-plus"></i>
+          </button>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="/add_transaction/debit">
+                <span class="label label-danger">
+                    <i class="fa fa-minus fa-fw"></i>
+                </span>&nbsp;&nbsp;debit
+            </a></li>
+            <li><a href="/add_transaction/credit">
+                <span class="label label-success">
+                    <i class="fa fa-plus fa-fw"></i>
+                </span>&nbsp;&nbsp;credit
+            </a></li>
+            <li><a href="/add_transaction/transfer">
+                <span class="label label-primary">
+                    <i class="fa fa-exchange fa-fw"></i>
+                </span>&nbsp;&nbsp;transfer
+            </a></li>
+          </ul>
+        </div>
+        </h3>
     </div>
     {{ data | safe }}
 {% endblock %}

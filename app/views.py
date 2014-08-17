@@ -119,14 +119,6 @@ def add_expense(operationtype):
                            **context)
 
 
-@app.route('/add_transaction')
-def add_transaction_choice():
-    return render_template('add_transaction_choice.html',
-                           operationtype='transaction',
-                           path='add_transaction',
-                           **context)
-
-
 @app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
 def edit_transaction(transaction_id):
     form = forms.AddTransactionForm()
@@ -260,13 +252,6 @@ def add_scheduled_transaction(operationtype):
                            operationtype='scheduled ' + operationtype,
                            **context)
 
-
-@app.route('/add_scheduled_transaction')
-def add_scheduled_transaction_choice():
-    return render_template('add_transaction_choice.html',
-                           operationtype='scheduled transaction',
-                           path='add_scheduled_transaction',
-                           **context)
 
 @app.errorhandler(404)
 def page_not_found(e):

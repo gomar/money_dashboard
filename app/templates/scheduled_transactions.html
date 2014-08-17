@@ -4,16 +4,44 @@
 {% endblock %}
 {% block body %}
 	<div class="page-header">
-		<h3>Scheduled transactions &nbsp;&nbsp;<a href="/add_scheduled_transaction" class="btn btn-info btn-xs" role="button"><i class="fa fa-plus"></i></a></h3>
+		<h3>Scheduled transactions &nbsp;&nbsp;
+		<div class="btn-group">
+		  <button type="button" class="btn btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown">
+		    <i class="fa fa-plus"></i>
+		  </button>
+		  <ul class="dropdown-menu" role="menu">
+		    <li><a href="/add_scheduled_transaction/debit">
+		    	<span class="label label-danger">
+		    		<i class="fa fa-minus fa-fw"></i>
+		    	</span>&nbsp;&nbsp;debit
+		    </a></li>
+		    <li><a href="/add_scheduled_transaction/credit">
+		    	<span class="label label-success">
+		    		<i class="fa fa-plus fa-fw"></i>
+		    	</span>&nbsp;&nbsp;credit
+		    </a></li>
+		    <li><a href="/add_scheduled_transaction/transfer">
+		    	<span class="label label-primary">
+		    		<i class="fa fa-exchange fa-fw"></i>
+		    	</span>&nbsp;&nbsp;transfer
+		    </a></li>
+		  </ul>
+		</div>
+		</h3>
 	</div>
 	{% for transaction in scheduled_transactions %}
 	<div class="col-sm-6">
 		<div class="panel panel-default">
 			<div class="panel-heading">
 			    <h3 class="panel-title">{% if transaction.next_occurence <= now %} <i class="fa fa-exclamation-triangle"></i>{% endif %} {{ transaction.description }}
-				<div class="btn-group btn-group-xs pull-right">
-					<a href="/edit_scheduled_transaction/{{ transaction.id }}" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>
-					<a href="/delete_scheduled_transaction/{{ transaction.id }}" class="btn btn-default confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>
+			    <div class="btn-toolbar pull-right" role="toolbar">
+			    	<div class="btn-group btn-group-xs">
+						<a href="/info_scheduled_transaction/{{ transaction.id }}" class="btn btn-info" role="button"><i class="fa fa-info"></i></a>
+					</div>
+					<div class="btn-group btn-group-xs">
+						<a href="/edit_scheduled_transaction/{{ transaction.id }}" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>
+						<a href="/delete_scheduled_transaction/{{ transaction.id }}" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>
+					</div>
 				</div>
 				</h3>
 			</div>
@@ -36,8 +64,17 @@
 			      	  {{ "%.2f"| format(transaction.amount) }} &nbsp;<i class="fa fa-gbp"></i>
 			      </div>
 				</div>
+				<!-- every -->
+				<div class="row">
+			      <div class="col-sm-4 text-right">
+			        <small><strong>every</strong></small>
+			      </div>
+			      <div class="col-sm-8">
+			      	  month
+			      </div>
+				</div>
 				<div class="btn-group btn-group-xs pull-right">
-					<a href="/create_scheduled_transaction/{{ transaction.id }}" class="btn btn-info" role="button">create</a>
+					<a href="/create_scheduled_transaction/{{ transaction.id }}" class="btn btn-primary" role="button">create</a>
 					<a href="/skip_scheduled_transaction/{{ transaction.id }}" class="btn btn-default" role="button">skip</a>
 				</div>
 			</div>
