@@ -31,13 +31,15 @@
 	</div>
 	{% for transaction in scheduled_transactions %}
 	<div class="col-sm-6">
-		<div class="panel panel-default">
+		<div class="panel panel-{% if transaction.next_occurence <= now %}primary{% else %}default{% endif %}">
 			<div class="panel-heading">
 			    <h3 class="panel-title">{% if transaction.next_occurence <= now %} <i class="fa fa-exclamation-triangle"></i>{% endif %} {{ transaction.description }}
 			    <div class="btn-toolbar pull-right" role="toolbar">
+			    	{% if transaction.note != '' %}
 			    	<div class="btn-group btn-group-xs">
-						<a href="/info_scheduled_transaction/{{ transaction.id }}" class="btn btn-info" role="button"><i class="fa fa-info"></i></a>
+						<a href="/info_scheduled_transaction/{{ transaction.id }}" class="btn btn-info transactioninfo" role="button"><i class="fa fa-info"></i></a>
 					</div>
+					{% endif %}
 					<div class="btn-group btn-group-xs">
 						<a href="/edit_scheduled_transaction/{{ transaction.id }}" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>
 						<a href="/delete_scheduled_transaction/{{ transaction.id }}" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>
@@ -74,7 +76,7 @@
 			      </div>
 				</div>
 				<div class="btn-group btn-group-xs pull-right">
-					<a href="/create_scheduled_transaction/{{ transaction.id }}" class="btn btn-default" role="button">create</a>
+					<a href="/create_scheduled_transaction/{{ transaction.id }}" class="btn btn-{% if transaction.next_occurence <= now %}primary{% else %}default{% endif %}" role="button">create</a>
 					<a href="/skip_scheduled_transaction/{{ transaction.id }}" class="btn btn-default" role="button">skip</a>
 				</div>
 			</div>
@@ -104,6 +106,15 @@
                                     document.location.href = link;
                                 } 
                             }}]
+            });
+        });
+        $(document).on("click", ".transactioninfo", function(e) {
+            var link = $(this).attr("href"); // "get" the intended link in a var
+            e.preventDefault();
+            new BootstrapDialog.show({
+                title: 'Info',
+                type: 'type-info',
+                message: $('<div></div>').load(link)
             });
         });
     </script>

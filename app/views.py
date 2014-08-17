@@ -279,6 +279,15 @@ def skip_scheduled_transaction(transaction_id):
     return redirect('/scheduled_transactions')
 
 
+@app.route('/info_scheduled_transaction/<int:transaction_id>')
+def info_scheduled_transaction(transaction_id):
+    data = pd.read_sql_table('scheduled_transaction', db.engine)
+    note = data[data['id'] == transaction_id]['note']
+    return render_template('info_transaction.html', 
+                           note=note.iloc[0],
+                           **context)
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html', **context), 404
