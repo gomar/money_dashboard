@@ -62,6 +62,14 @@ def add_account():
                            **context)
 
 
+@app.route('/delete_account/<int:account_id>')
+def delete_account(account_id):
+    account = models.Account.query.get(account_id)
+    db.session.delete(account)
+    db.session.commit()
+    return redirect('/accounts')
+
+
 @app.route('/account/<int:account_id>/transactions')
 def transactions(account_id):
     account = models.Account.query.get(account_id)
@@ -88,17 +96,19 @@ def transactions(account_id):
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
     # adding the total amount
-    data['balance  (<i class="fa fa-gbp"></i>)'] = data['amount'][::-1].cumsum()[::-1]
+    currency = '(<i class="fa fa-%s"></i>)' % account.currency
+
+    data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1]
 
     # replacing amount by in and out for easier reading
-    data['in (<i class="fa fa-gbp"></i>)'] = data[data['amount'] >= 0]['amount']
-    data['out (<i class="fa fa-gbp"></i>)'] = data[data['amount'] < 0]['amount']
+    data['in %s' % currency] = data[data['amount'] >= 0]['amount']
+    data['out %s' % currency] = data[data['amount'] < 0]['amount']
 
     # displaying the pandas data as an html table
     data = data[[' ', 'date', 'description', 'category', 
-                 'in (<i class="fa fa-gbp"></i>)', 
-                 'out (<i class="fa fa-gbp"></i>)', 
-                 'balance  (<i class="fa fa-gbp"></i>)']]
+                 'in %s' % currency, 
+                 'out %s' % currency, 
+                 'balance  %s' % currency]]
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
@@ -156,6 +166,7 @@ def add_transaction(account_id, operationtype):
         return redirect('/account/%d/transactions' % account_id)
     return render_template('add_transaction.html', 
                            form=form, operationtype=operationtype,
+                           currency=account.currency,
                            **context)
 
 
@@ -167,6 +178,7 @@ def edit_transaction(transaction_id):
     form.category.choices = zip(categories, categories)
     # getting the transaction element
     transaction = models.Transaction.query.get(transaction_id)
+    account = models.Account.query.filter(models.Account.name == transaction.account).all()[0]
     if form.validate_on_submit():
         # update the rssfeed column
         transaction.date = form.date.data
@@ -186,7 +198,7 @@ def edit_transaction(transaction_id):
         form.note.data = transaction.note
     return render_template('edit_transaction.html', 
                            operationtype='transaction',
-                           form=form,
+                           form=form, currency=account.currency,
                            **context)
 
 
@@ -235,16 +247,19 @@ def display_graphs():
 
 
 
-@app.route('/scheduled_transactions')
-def scheduled_transactions():
+@app.route('/account/<int:account_id>/scheduled_transactions')
+def scheduled_transactions(account_id):
+    account = models.Account.query.get(account_id)
     df = pd.read_sql_table('scheduled_transaction', db.engine)
+    df = df[df['account'] == account.name]
     pd.to_datetime(df['next_occurence'])
     df = df.sort('next_occurence')
     df = pd.DataFrame(df.values, columns=df.columns)
     df_dict = df.T.to_dict()
     scheduled_transactions = [df_dict[i] for i in range(len(df_dict))]
-    return render_template('scheduled_transactions.html', 
+    return render_template('/account/%d/scheduled_transactions' % account_id, 
                            scheduled_transactions=scheduled_transactions,
+                           currency=account.currency,
                            **context)
 
 
@@ -257,8 +272,9 @@ def delete_scheduled_transaction(transaction_id):
     return redirect('/scheduled_transactions')
 
 
-@app.route('/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
-def add_scheduled_transaction(operationtype):
+@app.route('/account/<int:account_id>/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
+def add_scheduled_transaction(account_id, operationtype):
+    account = models.Account.query.get(account_id)
     form = forms.AddTransactionForm()
     form.date.label = 'next occurence'
 
@@ -279,6 +295,7 @@ def add_scheduled_transaction(operationtype):
         # creating database entry
         u = models.ScheduledTransaction(next_occurence=form.date.data,
                                         amount=amount,
+                                        account=account.name,
                                         description=form.description.data,
                                         category=form.category.data,
                                         note=form.note.data)

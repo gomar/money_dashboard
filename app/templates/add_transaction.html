@@ -49,7 +49,7 @@
 	        <div class="col-md-4">
 	        	<div class="input-group">
 		        	{{ form.amount(class_='form-control') }}
-		        	<div class="input-group-addon"><i class="fa fa-gbp"></i></div>
+		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
 			    </div>
 		        {% if form.amount.errors %}
 		            {% for e in form.amount.errors %}
