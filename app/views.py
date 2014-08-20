@@ -18,7 +18,7 @@ list_category = ['Vehicle',
                  'Salary',
                  'Tax']
 
-list_currency = [('euro', 'Euro'), ('gbp', 'Pound sterling'), ('usd', 'US dollar')]
+list_currency = [('euro', u'Euro'), ('gbp', u'British pound'), ('usd', u'US dollar')]
 
 
 def update_waiting_scheduled_transactions():
@@ -29,10 +29,21 @@ def update_waiting_scheduled_transactions():
     else:
         return 0
 
+def in_account(path):
+    path = path.split('/')
+    path.remove('')
+    return (path[0] == 'account') and (len(path) > 1)
+
+app.jinja_env.filters['in_account'] = in_account
+
 
 global context
 context = {'now': datetime.datetime.now(),
            'waiting_scheduled_transactions': update_waiting_scheduled_transactions()}
+
+@app.route('/')
+def intro():
+    return render_template('intro.html')
 
 
 @app.route('/accounts')
