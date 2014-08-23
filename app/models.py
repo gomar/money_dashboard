@@ -1,5 +1,11 @@
 from app import db
 
+#Table to handle the self-referencing many-to-many relationship for the User class:
+#First column holds the user who follows, the second the user who is being followed.
+transfer = db.Table('transfer',
+    db.Column("from_account", db.Text, db.ForeignKey("transaction.id"), primary_key=True),
+    db.Column("to_account", db.Text, db.ForeignKey("transaction.id"), primary_key=True)
+)
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -9,6 +15,11 @@ class Transaction(db.Model):
     description = db.Column(db.Text)
     category = db.Column(db.Text)
     note = db.Column(db.Text)
+    transfer_to = db.relationship("Transaction", 
+                                  secondary=transfer,
+                                  primaryjoin=id==transfer.c.from_account,
+                                  secondaryjoin=id==transfer.c.to_account,
+                                  backref="transfer_from")
 
     def __repr__(self):
         return '<id %r>' % self.id

@@ -16,6 +16,5 @@
 - ajouter export csv par category quand graphes
 - multi compte -> compte liquide + transfert n'est pas considere comme depense
 - jour / semaine / mois
-- virement est une operation liee
 - cheque / cb / achat en ligne
 - graphs pour chaque compte

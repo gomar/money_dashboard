@@ -20,6 +20,8 @@ list_category = ['Vehicle',
 
 list_currency = [('euro', u'Euro'), ('gbp', u'British pound')]
 
+list_operation_type = ['', 'online payment']
+
 
 def update_waiting_scheduled_transactions():
     if os.path.exists(app.config['DB_FNAME']):
@@ -62,7 +64,7 @@ def home():
     transactions = transactions.groupby('name', as_index=False).sum()
     accounts['amount'] = 0.
     for name in transactions.name:
-        accounts.ix[accounts['name'] == name, 'amount'] = transactions['amount'].iloc[-1]
+        accounts.ix[accounts['name'] == name, 'amount'] = transactions.ix[transactions.name == name, 'amount'].iloc[-1]
     return render_template('accounts.html', 
                            accounts=accounts.T.to_dict(),
                            **context)
@@ -165,6 +167,8 @@ def delete_transaction(transaction_id):
 @app.route('/account/<int:account_id>/add_transaction/<operationtype>', methods=['GET', 'POST'])
 def add_transaction(account_id, operationtype):
     account = models.Account.query.get(account_id)
+    if operationtype == 'transfer':
+        return redirect('/account/%d/add_transfer' % account_id)
     form = forms.AddTransactionForm()
 
     # adding an extra category depending on type of operation
@@ -195,6 +199,43 @@ def add_transaction(account_id, operationtype):
     return render_template('add_transaction.html',
                            account_id=account_id,
                            form=form, operationtype=operationtype,
+                           currency=account.currency,
+                           **context)
+
+
+@app.route('/account/<int:account_id>/add_transfer', methods=['GET', 'POST'])
+def add_transfer(account_id):
+    account = models.Account.query.get(account_id)
+    form = forms.AddTransferForm()
+    accounts = pd.read_sql_table('account', db.engine)
+    accounts = accounts[accounts.id != account_id]
+    form.account_to.choices = zip(accounts.name, accounts.name)
+
+    if form.validate_on_submit():
+        # creating database entry
+        amount = abs(float(form.amount.data))
+        a = models.Transaction(date=form.date.data,
+                               account=account.name,
+                               amount=-amount,
+                               description=form.description.data,
+                               category='transfer',
+                               note=form.note.data)
+        b = models.Transaction(date=form.date.data,
+                               account=form.account_to.data,
+                               amount=amount,
+                               description=form.description.data,
+                               category='transfer',
+                               note=form.note.data,
+                               transfer_to=[a])
+        # adding to database
+        db.session.add(a)
+        db.session.add(b)
+        db.session.commit()
+        return redirect('/account/%d/transactions' % account_id)
+    return render_template('add_transfer.html',
+                           account_id=account_id,
+                           account_from=account.name,
+                           form=form,
                            currency=account.currency,
                            **context)
 

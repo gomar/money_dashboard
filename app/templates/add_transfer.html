@@ -1,0 +1,118 @@
+{% extends 'common/layout.html' %}
+{% import 'common/form_macros.html' as macros %}
+{% block css %}
+<link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}" rel="stylesheet">
+<style type="text/css">
+	.btn-custom { 
+		background-color: #ffffff;
+		background-image: none;
+		border: 1px solid #dce4ec;
+		border-radius: 3px;
+		border-width: 2px;
+		-webkit-box-shadow: none;
+		box-shadow: none;
+  	}
+  	.btn-custom:hover {
+  		color: inherit;
+  	}
+  	.btn-custom:focus,
+	.btn-custom:active:focus,
+	.btn-custom.active:focus {
+  		color: inherit;
+  border-color: #2c3e50;
+  outline: 0;
+  	}
+</style>
+{% endblock css %}
+{% block body %}
+	<div class="page-header">
+		<h3>Add a {{ operationtype }}</h3>
+	</div>
+	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
+		{{ form.csrf_token }}
+		<!-- DATE -->
+	    <div class="form-group {% if form.date.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.date.label }}</label>
+	        <div class="col-md-4">
+		        {{ form.date(class_='form-control', id="my-datepicker") }}
+		        {% if form.date.errors %}
+		            {% for e in form.date.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- FROM ACCOUNT -->
+	   	<div class="form-group">
+		    <label class="col-md-2 control-label">from</label>
+		    <div class="col-md-4">
+		        <p class="form-control-static"> {{ account_from }} </p>
+		    </div>
+		</div>
+		<!-- TO ACCOUNT -->
+	   	<div class="form-group">
+	        <label class="control-label col-md-2">to</label>
+	        	{{ form.account_to(class_='selectpicker col-md-10') }}
+	    </div>
+	    <!-- AMOUNT -->
+	   	<div class="form-group {% if form.amount.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.amount.label }}</label>
+	        <div class="col-md-4">
+	        	<div class="input-group">
+		        	{{ form.amount(class_='form-control') }}
+		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
+			    </div>
+		        {% if form.amount.errors %}
+		            {% for e in form.amount.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- DESCRIPTION -->
+	   	<div class="form-group {% if form.description.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.description.label }}</label>
+	        <div class="col-md-10">
+	        	{{ form.description(class_='form-control') }}
+		        {% if form.description.errors %}
+		            {% for e in form.description.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	   	<!-- NOTE -->
+	   	<div class="form-group {% if form.note.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.note.label }}</label>
+	        <div class="col-md-10">
+	        	{{ form.note(class_='form-control') }}
+		        {% if form.note.errors %}
+		            {% for e in form.note.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <div class="btn-group pull-right">
+	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
+			<button type="submit" class="btn btn-info">Add {{ operationtype }}</button>
+		</div>
+    </form>
+{% endblock body %}
+{% block javascript %}
+<script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
+<script type="text/javascript">
+$('#my-datepicker').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    todayHighlight: true,
+    format: "dd/mm/yyyy"
+});
+$('.selectpicker').selectpicker({
+      style: 'btn-custom'  
+});
+</script>
+{% endblock javascript %}
