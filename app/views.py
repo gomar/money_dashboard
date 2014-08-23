@@ -57,6 +57,12 @@ def intro():
 @app.route('/accounts')
 def home():
     accounts = pd.read_sql_table('account', db.engine)
+    transactions = pd.read_sql_table('transaction', db.engine,columns=['account', 'amount']) 
+    transactions = transactions.rename(columns={'account': 'name'})
+    transactions = transactions.groupby('name', as_index=False).sum()
+    accounts['amount'] = 0.
+    for name in transactions.name:
+        accounts.ix[accounts['name'] == name, 'amount'] = transactions['amount'].iloc[-1]
     return render_template('accounts.html', 
                            accounts=accounts.T.to_dict(),
                            **context)
@@ -84,6 +90,9 @@ def add_account():
 @app.route('/delete_account/<int:account_id>')
 def delete_account(account_id):
     account = models.Account.query.get(account_id)
+    transactions = models.Transaction.query.filter(models.Transaction.account == account.name).all()
+    for transaction in transactions:
+        db.session.delete(transaction)
     db.session.delete(account)
     db.session.commit()
     return redirect('/accounts')
