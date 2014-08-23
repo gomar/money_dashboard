@@ -20,11 +20,15 @@
                 <li><a href="javascript:history.forward()"><i class="fa fa-chevron-right"></i></a></li>
                 <li><a href="/accounts"><i class="fa fa-home"></i></a></li>
               </ul>
-              {% if request.path | in_account %}
+              {% if request.path | is_in('account') %}
               <ul class="nav navbar-nav navbar-right">
-                <li><a href="/transactions"><i class="fa fa-table"></i></a></li>
-                <li>
-                  <a href="/scheduled_transactions">
+                <li {% if request.path | is_in('add_transaction') %}class="active"{% endif %}>
+                    <a href="/account/{{ account_id }}/transactions">
+                    <i class="fa fa-table"></i>
+                    </a>
+                </li>
+                <li {% if request.path | is_in('add_scheduled_transaction') %}class="active"{% endif %}>
+                  <a href="/account/{{ account_id }}/scheduled_transactions">
                       <i class="fa fa-clock-o"></i>
                       {% if waiting_scheduled_transactions > 0 %}
                       <sup><span class="label label-danger">{{ waiting_scheduled_transactions }}</span></sup>

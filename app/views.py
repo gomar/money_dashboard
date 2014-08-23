@@ -29,12 +29,12 @@ def update_waiting_scheduled_transactions():
     else:
         return 0
 
-def in_account(path):
-    path = path.split('/')
-    path.remove('')
-    return (path[0] == 'account') and (len(path) > 1)
+def is_in(url, target):
+    url = url.split('/')
+    url.remove('')
+    return target in url
 
-app.jinja_env.filters['in_account'] = in_account
+app.jinja_env.filters['is_in'] = is_in
 
 
 global context
@@ -122,7 +122,7 @@ def transactions(account_id):
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
-    return render_template('transactions.html', data=data, **context)
+    return render_template('transactions.html', data=data, account_id=account_id, **context)
 
 
 @app.route('/info_transaction/<int:transaction_id>')
@@ -174,7 +174,8 @@ def add_transaction(account_id, operationtype):
         db.session.add(u)
         db.session.commit()
         return redirect('/account/%d/transactions' % account_id)
-    return render_template('add_transaction.html', 
+    return render_template('add_transaction.html',
+                           account_id=account_id,
                            form=form, operationtype=operationtype,
                            currency=account.currency,
                            **context)
@@ -208,6 +209,7 @@ def edit_transaction(transaction_id):
         form.note.data = transaction.note
     return render_template('edit_transaction.html', 
                            operationtype='transaction',
+                           account_id=account_id,
                            form=form, currency=account.currency,
                            **context)
 
@@ -269,6 +271,7 @@ def scheduled_transactions(account_id):
     scheduled_transactions = [df_dict[i] for i in range(len(df_dict))]
     return render_template('scheduled_transactions.html', 
                            scheduled_transactions=scheduled_transactions,
+                           account_id=account_id,
                            currency=account.currency,
                            **context)
 
@@ -278,8 +281,10 @@ def delete_scheduled_transaction(transaction_id):
     transaction = models.ScheduledTransaction.query.get(transaction_id)
     db.session.delete(transaction)
     db.session.commit()
+    account_id = models.Account.query\
+            .filter(models.Account.name == transaction.account).all()[0].id
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
-    return redirect('/scheduled_transactions')
+    return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
 @app.route('/account/<int:account_id>/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
@@ -313,10 +318,11 @@ def add_scheduled_transaction(account_id, operationtype):
         db.session.add(u)
         db.session.commit()
         context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
-
-        return redirect('/scheduled_transactions')
+        return redirect('/account/%d/scheduled_transactions' % account_id)
     return render_template('add_transaction.html', 
                            form=form, 
+                           account_id=account_id,
+                           currency=account.currency,
                            operationtype='scheduled ' + operationtype,
                            **context)
 
@@ -326,6 +332,7 @@ def create_scheduled_transaction(transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     u = models.Transaction(date=s_transaction.next_occurence,
                            amount=s_transaction.amount,
+                           account=s_transaction.account,
                            description=s_transaction.description,
                            category=s_transaction.category,
                            note=s_transaction.note)
@@ -333,8 +340,10 @@ def create_scheduled_transaction(transaction_id):
     db.session.add(u)
     s_transaction.next_occurence = s_transaction.next_occurence + dateutil.relativedelta.relativedelta(months=1)
     db.session.commit()
+    account_id = models.Account.query\
+            .filter(models.Account.name == s_transaction.account).all()[0].id
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
-    return redirect('/scheduled_transactions')
+    return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
 @app.route('/skip_scheduled_transaction/<int:transaction_id>')
@@ -342,8 +351,10 @@ def skip_scheduled_transaction(transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     s_transaction.next_occurence = s_transaction.next_occurence + dateutil.relativedelta.relativedelta(months=1)
     db.session.commit()
+    account_id = models.Account.query\
+            .filter(models.Account.name == s_transaction.account).all()[0].id
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
-    return redirect('/scheduled_transactions')
+    return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
 @app.route('/info_scheduled_transaction/<int:transaction_id>')
@@ -364,6 +375,8 @@ def edit_scheduled_transaction(transaction_id):
     form.category.choices = zip(categories, categories)
     # getting the transaction element
     transaction = models.ScheduledTransaction.query.get(transaction_id)
+    account_id = models.Account.query\
+        .filter(models.Account.name == transaction.account).all()[0].id
     if form.validate_on_submit():
         # update the rssfeed column
         transaction.next_occurence = form.date.data
@@ -373,7 +386,7 @@ def edit_scheduled_transaction(transaction_id):
         transaction.note = form.note.data
         db.session.commit()
         context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
-        return redirect('/scheduled_transactions')
+        redirect('/account/%d/scheduled_transactions' % account_id)
     else:
         form.date.data = transaction.next_occurence
         form.amount.data = '%.2f' % transaction.amount
@@ -382,6 +395,7 @@ def edit_scheduled_transaction(transaction_id):
         form.note.data = transaction.note
     return render_template('edit_transaction.html',
                            operationtype='scheduled transaction',
+                           account_id=account_id,
                            form=form,
                            **context)
 
