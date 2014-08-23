@@ -43,24 +43,7 @@ context = {'now': datetime.datetime.now(),
 
 @app.route('/')
 def intro():
-    import time
-    def generate():
-        for i in range(10):
-          time.sleep(0.5)
-          yield flash('%d test' % i)
-    for i in range(10):
-        flash('%d test' % i)
-        time.sleep(0.5)
     return render_template('intro.html')
-    from flask import Response
-
-@app.route('/large.csv')
-def generate_large_csv():
-    def generate():
-        for row in iter_all_rows():
-            yield ','.join(row) + '\n'
-    return Response(generate(), mimetype='text/csv')
-
 
 @app.route('/accounts')
 def home():
