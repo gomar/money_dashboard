@@ -18,7 +18,7 @@ list_category = ['Vehicle',
                  'Salary',
                  'Tax']
 
-list_currency = [('euro', u'Euro'), ('gbp', u'British pound'), ('usd', u'US dollar')]
+list_currency = [('euro', u'Euro'), ('gbp', u'British pound')]
 
 
 def update_waiting_scheduled_transactions():
@@ -34,16 +34,25 @@ def is_in(url, target):
     url.remove('')
     return target in url
 
-app.jinja_env.filters['is_in'] = is_in
+def account_name(url):
+    url = url.split('/')
+    url.remove('')
+    idx_account = url.index('account')
+    account = models.Account.query.get(int(url[idx_account + 1]))
+    return account.name
 
+app.jinja_env.filters['is_in'] = is_in
+app.jinja_env.filters['account_name'] = account_name
 
 global context
 context = {'now': datetime.datetime.now(),
            'waiting_scheduled_transactions': update_waiting_scheduled_transactions()}
 
+
 @app.route('/')
 def intro():
     return render_template('intro.html')
+
 
 @app.route('/accounts')
 def home():

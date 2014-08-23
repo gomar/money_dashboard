@@ -22,6 +22,7 @@
               </ul>
               {% if request.path | is_in('account') %}
               <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-text"><small>{{ request.path | account_name() }}</small></li>
                 <li {% if request.path | is_in('add_transaction') %}class="active"{% endif %}>
                     <a href="/account/{{ account_id }}/transactions">
                     <i class="fa fa-table"></i>
