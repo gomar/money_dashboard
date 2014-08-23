@@ -269,7 +269,7 @@ def edit_transaction(transaction_id):
         form.note.data = transaction.note
     return render_template('edit_transaction.html', 
                            operationtype='transaction',
-                           account_id=account_id,
+                           account_id=account.id,
                            form=form, currency=account.currency,
                            **context)
 
@@ -350,7 +350,7 @@ def delete_scheduled_transaction(transaction_id):
 @app.route('/account/<int:account_id>/add_scheduled_transaction/<operationtype>', methods=['GET', 'POST'])
 def add_scheduled_transaction(account_id, operationtype):
     account = models.Account.query.get(account_id)
-    form = forms.AddTransactionForm()
+    form = forms.AddScheduledTransactionForm()
     form.date.label = 'next occurence'
 
     # adding an extra category depending on type of operation
@@ -432,7 +432,7 @@ def info_scheduled_transaction(transaction_id):
 
 @app.route('/edit_scheduled_transaction/<int:transaction_id>', methods=['GET', 'POST'])
 def edit_scheduled_transaction(transaction_id):
-    form = forms.AddTransactionForm()
+    form = forms.AddScheduledTransactionForm()
     form.date.label = 'next occurence'
     categories = list_category + ['Misc. Expense', 'Misc. Income']
     categories.sort()

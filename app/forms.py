@@ -10,10 +10,18 @@ class AddTransactionForm(Form):
     description = TextField('description', validators=[DataRequired(), length(max=30)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
-    every_nb = TextField('every')
+
+
+class AddScheduledTransactionForm(Form):
+    date = DateField('date', format='%d/%m/%Y', validators=[DataRequired()])
+    amount = TextField('amount', validators=[DataRequired()])
+    description = TextField('description', validators=[DataRequired(), length(max=30)])
+    category = SelectField('category', validators=[DataRequired()])
+    note = TextField('note')
+    every_nb = TextField('every', validators=[])
     every_type = SelectField('every_type', choices=zip(['months', 'weeks', 'days'],
                                                        ['months', 'weeks', 'days']), 
-                             validators=[DataRequired()])
+                             validators=[])
 
 
 class AddTransferForm(Form):
