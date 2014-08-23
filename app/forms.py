@@ -10,6 +10,10 @@ class AddTransactionForm(Form):
     description = TextField('description', validators=[DataRequired(), length(max=30)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
+    every_nb = TextField('every')
+    every_type = SelectField('every_type', choices=zip(['months', 'weeks', 'days'],
+                                                       ['months', 'weeks', 'days']), 
+                             validators=[DataRequired()])
 
 
 class AddTransferForm(Form):

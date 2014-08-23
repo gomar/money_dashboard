@@ -373,7 +373,9 @@ def add_scheduled_transaction(account_id, operationtype):
                                         account=account.name,
                                         description=form.description.data,
                                         category=form.category.data,
-                                        note=form.note.data)
+                                        note=form.note.data,
+                                        every_nb=form.every_nb.data, 
+                                        every_type=form.every_type.data)
         # adding to database
         db.session.add(u)
         db.session.commit()
@@ -398,7 +400,8 @@ def create_scheduled_transaction(transaction_id):
                            note=s_transaction.note)
     # adding new transaction to database
     db.session.add(u)
-    s_transaction.next_occurence = s_transaction.next_occurence + dateutil.relativedelta.relativedelta(months=1)
+    s_transaction.next_occurence = s_transaction.next_occurence + \
+        dateutil.relativedelta.relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
     db.session.commit()
     account_id = models.Account.query\
             .filter(models.Account.name == s_transaction.account).all()[0].id
@@ -409,7 +412,8 @@ def create_scheduled_transaction(transaction_id):
 @app.route('/skip_scheduled_transaction/<int:transaction_id>')
 def skip_scheduled_transaction(transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
-    s_transaction.next_occurence = s_transaction.next_occurence + dateutil.relativedelta.relativedelta(months=1)
+    s_transaction.next_occurence = s_transaction.next_occurence + \
+        dateutil.relativedelta.relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
     db.session.commit()
     account_id = models.Account.query\
             .filter(models.Account.name == s_transaction.account).all()[0].id
@@ -435,27 +439,33 @@ def edit_scheduled_transaction(transaction_id):
     form.category.choices = zip(categories, categories)
     # getting the transaction element
     transaction = models.ScheduledTransaction.query.get(transaction_id)
-    account_id = models.Account.query\
-        .filter(models.Account.name == transaction.account).all()[0].id
-    if form.validate_on_submit():
+    account = models.Account.query\
+        .filter(models.Account.name == transaction.account).all()[0]
+
+    if form.is_submitted():
         # update the rssfeed column
         transaction.next_occurence = form.date.data
         transaction.amount = form.amount.data
         transaction.description = form.description.data
         transaction.category = form.category.data
         transaction.note = form.note.data
+        transaction.every_nb = int(form.every_nb.data)
+        transaction.every_type = form.every_type.data
         db.session.commit()
         context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
-        redirect('/account/%d/scheduled_transactions' % account_id)
+        return redirect('/account/%d/scheduled_transactions' % account.id)
     else:
         form.date.data = transaction.next_occurence
         form.amount.data = '%.2f' % transaction.amount
         form.description.data = transaction.description
         form.category.data = transaction.category
         form.note.data = transaction.note
+        form.every_nb.data = str(transaction.every_nb)
+        form.every_type.data = transaction.every_type
     return render_template('edit_transaction.html',
                            operationtype='scheduled transaction',
-                           account_id=account_id,
+                           account_id=account.id,
+                           currency=account.currency,
                            form=form,
                            **context)
 

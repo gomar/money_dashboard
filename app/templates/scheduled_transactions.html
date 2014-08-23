@@ -20,11 +20,6 @@
 		    		<i class="fa fa-plus fa-fw"></i>
 		    	</span>&nbsp;&nbsp;credit
 		    </a></li>
-		    <li><a href="./add_scheduled_transaction/transfer">
-		    	<span class="label label-primary">
-		    		<i class="fa fa-exchange fa-fw"></i>
-		    	</span>&nbsp;&nbsp;transfer
-		    </a></li>
 		  </ul>
 		</div>
 		</h3>
@@ -72,7 +67,7 @@
 			        <small><strong>every</strong></small>
 			      </div>
 			      <div class="col-sm-8">
-			      	  month
+			      	  {{ transaction.every_nb }} {{ transaction.every_type }}
 			      </div>
 				</div>
 				<div class="btn-group btn-group-xs pull-right">

@@ -33,6 +33,8 @@ class ScheduledTransaction(db.Model):
     description = db.Column(db.Text)
     category = db.Column(db.Text)
     note = db.Column(db.Text)
+    every_nb = db.Column(db.Integer)
+    every_type = db.Column(db.Text)
 
     def __repr__(self):
         return '<id %r>' % self.id

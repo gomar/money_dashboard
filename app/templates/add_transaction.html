@@ -58,6 +58,22 @@
 		        {% endif %}
 		    </div>
 	    </div>
+	    {% if request.path | is_in('add_scheduled_transaction') %}
+		    <div class="form-group {% if form.every_nb.errors %}has-error{% endif %}">
+		        <label class="control-label col-md-2">{{ form.every_nb.label }}</label>
+		        <div class="col-md-2">
+		        	<div class="input-group">
+			        	{{ form.every_nb(class_='form-control') }}
+				    </div>
+			        {% if form.every_nb.errors %}
+			            {% for e in form.every_nb.errors %}
+			                <p class="help-block">{{ e }}</p>
+			            {% endfor %}
+			        {% endif %}
+			    </div>
+			    {{ form.every_type(class_='selectpicker col-md-2') }}
+		    </div>
+	    {% endif %}
 	    <!-- DESCRIPTION -->
 	   	<div class="form-group {% if form.description.errors %}has-error{% endif %}">
 	        <label class="control-label col-md-2">{{ form.description.label }}</label>
