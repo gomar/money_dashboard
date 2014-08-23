@@ -1,5 +1,5 @@
 import os, datetime, calendar, time, dateutil
-from flask import render_template, Flask, redirect
+from flask import render_template, Flask, redirect, flash
 from flask.ext.sqlalchemy import SQLAlchemy
 import pandas as pd
 import numpy as np
@@ -43,7 +43,23 @@ context = {'now': datetime.datetime.now(),
 
 @app.route('/')
 def intro():
+    import time
+    def generate():
+        for i in range(10):
+          time.sleep(0.5)
+          yield flash('%d test' % i)
+    for i in range(10):
+        flash('%d test' % i)
+        time.sleep(0.5)
     return render_template('intro.html')
+    from flask import Response
+
+@app.route('/large.csv')
+def generate_large_csv():
+    def generate():
+        for row in iter_all_rows():
+            yield ','.join(row) + '\n'
+    return Response(generate(), mimetype='text/csv')
 
 
 @app.route('/accounts')
@@ -268,7 +284,7 @@ def scheduled_transactions(account_id):
     df = pd.DataFrame(df.values, columns=df.columns)
     df_dict = df.T.to_dict()
     scheduled_transactions = [df_dict[i] for i in range(len(df_dict))]
-    return render_template('/account/%d/scheduled_transactions' % account_id, 
+    return render_template('scheduled_transactions.html', 
                            scheduled_transactions=scheduled_transactions,
                            currency=account.currency,
                            **context)
