@@ -62,9 +62,10 @@ def home():
     transactions = pd.read_sql_table('transaction', db.engine,columns=['account', 'amount']) 
     transactions = transactions.rename(columns={'account': 'name'})
     transactions = transactions.groupby('name', as_index=False).sum()
-    accounts['amount'] = 0.
+    accounts['amount'] = accounts['reconciled_balance']
     for name in transactions.name:
-        accounts.ix[accounts['name'] == name, 'amount'] = transactions.ix[transactions.name == name, 'amount'].iloc[-1]
+        accounts.ix[accounts['name'] == name, 'amount'] += \
+            transactions.ix[transactions.name == name, 'amount'].iloc[-1]
     return render_template('accounts.html', 
                            accounts=accounts.T.to_dict(),
                            **context)
@@ -78,7 +79,8 @@ def add_account():
     if form.validate_on_submit():
         # creating database entry
         u = models.Account(name=form.name.data,
-                           currency=form.currency.data)
+                           currency=form.currency.data,
+                           reconciled_balance=form.initial_balance.data)
         # adding to database
         db.session.add(u)
         db.session.commit()
@@ -128,7 +130,7 @@ def transactions(account_id):
     # adding the total amount
     currency = '(<i class="fa fa-%s"></i>)' % account.currency
 
-    data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1]
+    data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1] + float(account.reconciled_balance)
 
     # replacing amount by in and out for easier reading
     data['in %s' % currency] = data[data['amount'] >= 0]['amount']

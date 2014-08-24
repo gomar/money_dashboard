@@ -1,7 +1,5 @@
 # TODO
 - highlight first line of table
-- echeancier:
-	- ends: never, after:
 - logo pour categories:
 	- fa-child
 	- fa-car

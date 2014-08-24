@@ -41,3 +41,4 @@ class AddAccount(Form):
     name = TextField('name', validators=[DataRequired()])
     currency = SelectField('currency', 
                            validators=[DataRequired()])
+    initial_balance = TextField('initial balance', validators=[DataRequired()])

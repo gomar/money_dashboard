@@ -44,6 +44,7 @@ class Account(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
     currency = db.Column(db.Text)
+    reconciled_balance = db.Column(db.Numeric(precision=2))
 
     def __repr__(self):
         return '<name %r>' % self.name

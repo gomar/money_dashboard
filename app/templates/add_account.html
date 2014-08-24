@@ -30,7 +30,7 @@
 	</div>
 	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
 		{{ form.csrf_token }}
-		<!-- DESCRIPTION -->
+		<!-- NAME -->
 	   	<div class="form-group {% if form.name.errors %}has-error{% endif %}">
 	        <label class="control-label col-md-2">{{ form.name.label }}</label>
 	        <div class="col-md-10">
@@ -42,12 +42,19 @@
 		        {% endif %}
 		    </div>
 	    </div>
-	    <!-- CATEGORY -->
-	   	<div class="form-group">
-	        <label class="control-label col-md-2">{{ form.currency.label }}</label>
-	        	{{ form.currency(class_='selectpicker col-md-10') }}
+	    <!-- INITIAL BALANCE -->
+	   	<div class="form-group {% if form.initial_balance.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.initial_balance.label }}</label>
+	        <div class="col-md-3">
+	        	{{ form.initial_balance(class_='form-control') }}
+		        {% if form.initial_balance.errors %}
+		            {% for e in form.initial_balance.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+		    {{ form.currency(class_='selectpicker col-md-7') }}
 	    </div>
-	   	<!-- NOTE -->
 	   	<div class="btn-group pull-right">
 	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
 			<button type="submit" class="btn btn-info">Add account</button>
