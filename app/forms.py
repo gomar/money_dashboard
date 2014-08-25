@@ -10,6 +10,10 @@ class AddTransactionForm(Form):
     description = TextField('description', validators=[DataRequired(), length(max=30)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
+    operation_type = RadioField('operation type', default='months', 
+                                choices=zip(['credit card', 'online payment', 'cheque', 'other'],
+                                            ['credit card', 'online payment', 'next cheque:', 'other']), 
+                             validators=[DataRequired()])
 
 
 class AddScheduledTransactionForm(Form):
