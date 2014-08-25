@@ -35,6 +35,7 @@ class ScheduledTransaction(db.Model):
     note = db.Column(db.Text)
     every_nb = db.Column(db.Integer)
     every_type = db.Column(db.Text)
+    ends = db.Column(db.Date)
 
     def __repr__(self):
         return '<id %r>' % self.id

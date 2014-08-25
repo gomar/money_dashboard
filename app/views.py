@@ -110,20 +110,24 @@ def transactions(account_id):
 
     pd.set_option('display.max_colwidth', 1000)
 
-    data[' '] = '<div class="btn-toolbar pull-right" role="toolbar">'
+    data[' '] = ('<div class="dropdown">'
+                 '    <button class="btn btn-primary btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">'
+                 '         <i class="fa fa-cog"></i>'
+                 '    </button>'
+                 '<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">')
     data[' '] += np.where(data['note'] != '', 
-                          ('<div class="btn-group btn-group-xs">'
-                           '<a href="/info_transaction/' + data['id'].astype(str) + 
-                           '"class="btn btn-info transactioninfo" role="button"><i class="fa fa-info"></i></a>'
-                           '</div>'),
+                          ('<li role="presentation">'
+                           '<a role="menuitem" tabindex="-1" href="/info_transaction/' + data['id'].astype(str) + 
+                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                           '</li>'),
                           '')
-    data[' '] += '<div class="btn-group btn-group-xs">'
-    data[' '] += ('<a href="/edit_transaction/' + data['id'].astype(str) + 
-                  '" class="btn btn-default" role="button"><i class="fa fa-edit"></i></a>')
-    data[' '] += ('<a href="/delete_transaction/' + data['id'].astype(str) + 
-                  '" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>'
-                  '</div>')
-    data[' '] += '</div>'
+    data[' '] += ('<li role="presentation">'
+                  '<a role="menuitem" tabindex="-1" href="/edit_transaction/' + data['id'].astype(str) + 
+                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+    data[' '] += ('<li role="presentation">'
+                  '<a role="menuitem" tabindex="-1" href="/delete_transaction/' + data['id'].astype(str) + 
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
+    data[' '] += '</ul></div>'
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
@@ -377,7 +381,9 @@ def add_scheduled_transaction(account_id, operationtype):
                                         category=form.category.data,
                                         note=form.note.data,
                                         every_nb=form.every_nb.data, 
-                                        every_type=form.every_type.data)
+                                        every_type=form.every_type.data,
+                                        ends=form.ends.data)
+
         # adding to database
         db.session.add(u)
         db.session.commit()
@@ -453,6 +459,7 @@ def edit_scheduled_transaction(transaction_id):
         transaction.note = form.note.data
         transaction.every_nb = int(form.every_nb.data)
         transaction.every_type = form.every_type.data
+        transaction.ends = form.ends.data
         db.session.commit()
         context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
         return redirect('/account/%d/scheduled_transactions' % account.id)
@@ -464,6 +471,7 @@ def edit_scheduled_transaction(transaction_id):
         form.note.data = transaction.note
         form.every_nb.data = str(transaction.every_nb)
         form.every_type.data = transaction.every_type
+        form.ends.data = transaction.ends
     return render_template('edit_transaction.html',
                            operationtype='scheduled transaction',
                            account_id=account.id,

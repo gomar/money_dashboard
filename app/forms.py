@@ -1,5 +1,5 @@
 from flask_wtf import Form
-from wtforms import TextField, DateField, SelectField
+from wtforms import TextField, DateField, SelectField, RadioField, BooleanField
 from wtforms.validators import DataRequired, length, ValidationError, NumberRange
 from unidecode import unidecode
 
@@ -18,10 +18,12 @@ class AddScheduledTransactionForm(Form):
     description = TextField('description', validators=[DataRequired(), length(max=30)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
-    every_nb = TextField('every', validators=[])
-    every_type = SelectField('every_type', choices=zip(['months', 'weeks', 'days'],
+    every_nb = TextField('every', default=1, validators=[])
+    every_type = RadioField('every_type', default='months', choices=zip(['months', 'weeks', 'days'],
                                                        ['months', 'weeks', 'days']), 
-                             validators=[])
+                             validators=[DataRequired()])
+    end_boolean = BooleanField('end_boolean')
+    ends = DateField('date', format='%d/%m/%Y')
 
 
 class AddTransferForm(Form):
@@ -41,4 +43,4 @@ class AddAccount(Form):
     name = TextField('name', validators=[DataRequired()])
     currency = SelectField('currency', 
                            validators=[DataRequired()])
-    initial_balance = TextField('initial balance', validators=[DataRequired()])
+    initial_balance = TextField('initial balance', default=0, validators=[DataRequired()])

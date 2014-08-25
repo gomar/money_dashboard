@@ -42,7 +42,35 @@
 		            {% endfor %}
 		        {% endif %}
 		    </div>
+		    {% if request.path | is_in('edit_scheduled_transaction') %}
+		    <label class="control-label col-md-2">ends</label>
+	        <div class="col-md-4">
+				{{ form.ends(class_='form-control', id="my-datepicker2", placeholder="Never")}}
+		    </div>
+		    {% endif %}
+	    </div>	    
+		{% if request.path | is_in('edit_scheduled_transaction') %}
+		<div class="form-group {% if form.every_nb.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.every_nb.label }}</label>
+	        <div class="col-md-2">
+	        	<div class="input-group">
+		        	{{ form.every_nb(class_='form-control') }}
+			    </div>
+		        {% if form.every_nb.errors %}
+		            {% for e in form.every_nb.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+		    <div class="col-md-4">
+	    	    {% for value, label, _ in form.every_type.iter_choices() %}
+		            <label class="radio-inline">
+		                <input type="radio" name="{{ form.every_type.id }}" id="{{ form.every_type.id }}" value="{{ value }}" {% if form.every_type.default == value %}checked{% endif %}>{{ label }}
+		            </label>
+			    {% endfor %}
+		    </div>
 	    </div>
+	    {% endif %}
 	    <!-- AMOUNT -->
 	   	<div class="form-group {% if form.amount.errors %}has-error{% endif %}">
 	        <label class="control-label col-md-2">{{ form.amount.label }}</label>
@@ -58,22 +86,6 @@
 		        {% endif %}
 		    </div>
 	    </div>
-	    {% if request.path | is_in('edit_scheduled_transaction') %}
-		    <div class="form-group {% if form.every_nb.errors %}has-error{% endif %}">
-		        <label class="control-label col-md-2">{{ form.every_nb.label }}</label>
-		        <div class="col-md-2">
-		        	<div class="input-group">
-			        	{{ form.every_nb(class_='form-control') }}
-				    </div>
-			        {% if form.every_nb.errors %}
-			            {% for e in form.every_nb.errors %}
-			                <p class="help-block">{{ e }}</p>
-			            {% endfor %}
-			        {% endif %}
-			    </div>
-			    {{ form.every_type(class_='selectpicker col-md-2') }}
-		    </div>
-	    {% endif %}
 	    <!-- DESCRIPTION -->
 	   	<div class="form-group {% if form.description.errors %}has-error{% endif %}">
 	        <label class="control-label col-md-2">{{ form.description.label }}</label>
@@ -120,8 +132,21 @@ $('#my-datepicker').datepicker({
     todayHighlight: true,
     format: "dd/mm/yyyy"
 });
+$("#mySelect").on('change',function(){
+    // alert(this.value)
+    $('#myStartDate').datepicker("remove");
+    mydatepicker();//$('#id-element').datepicker("destroy");
+});
+$('#my-datepicker2').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    todayHighlight: true,
+    format: "dd/mm/yyyy",
+    startDate: document.getElementById('my-datepicker').value
+});
 $('.selectpicker').selectpicker({
-      style: 'btn-custom',
-  });
+      style: 'btn-custom'  
+});
 </script>
 {% endblock javascript %}
