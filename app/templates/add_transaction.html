@@ -76,17 +76,22 @@
 	        <label class="control-label col-md-2">{{ form.operation_type.label }}</label>
 		    <div class="form-inline col-md-10">
 	    	    {% for value, label, _ in form.operation_type.iter_choices() %}
-	    	    	{% if label == 'next cheque #' %}
+	    	    	{% if label == 'cheque' %}
 		    	    	<label class="radio-inline">
-			                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onchange="if( this.checked ) {$('#cheque_number').show(); this.value.append(' #'); }">{{ label }}
+			                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').show();}">{{ label }}
 			            </label>
-		            	{{ form.cheque_number(class_='form-control radio-inline', size=7, style="display: none") }}
 		            {% else %}
 		            <label class="radio-inline">
-		                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}">{{ label }}
+		                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').hide();}">{{ label }}
 		            </label>
 		            {% endif %}
 			    {% endfor %}
+		    </div>
+	    </div>
+	    <div class="form-group {% if form.cheque_number.errors %}has-error{% endif %}" style="display: none" id="cheque_number_option" style="display: none">
+	    	<label class="control-label col-md-2">cheque #</label>
+		    <div class="col-md-4">
+		    	{{ form.cheque_number(class_='form-control') }}
 		    </div>
 	    </div>
 	    {% endif %}

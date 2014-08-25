@@ -21,7 +21,7 @@ list_category = ['Vehicle',
 list_currency = [('euro', u'Euro (<i class="fa fa-euro"></i>)'), 
                  ('gbp', u'British pound (<i class="fa fa-gbp"></i>)')]
 
-list_operation_type = ['credit card', 'online payment', 'next cheque #', 'other']
+list_operation_type = ['credit card', 'online payment', 'cheque', 'other']
 
 
 def update_waiting_scheduled_transactions():
