@@ -18,9 +18,10 @@ list_category = ['Vehicle',
                  'Salary',
                  'Tax']
 
-list_currency = [('euro', u'Euro'), ('gbp', u'British pound')]
+list_currency = [('euro', u'Euro (<i class="fa fa-euro"></i>)'), 
+                 ('gbp', u'British pound (<i class="fa fa-gbp"></i>)')]
 
-list_operation_type = ['', 'online payment']
+list_operation_type = ['credit card', 'online payment', 'next cheque #', 'other']
 
 
 def update_waiting_scheduled_transactions():
@@ -186,6 +187,7 @@ def add_transaction(account_id, operationtype):
     categories = list_category + [additional_category]
     categories.sort()
     form.category.choices = zip(categories, categories)
+    form.operation_type.choices = zip(list_operation_type, list_operation_type)
 
     if form.validate_on_submit():
         if operationtype == 'debit':
