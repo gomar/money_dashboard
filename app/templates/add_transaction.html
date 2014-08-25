@@ -27,7 +27,7 @@
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>Add a {{ operationtype }}</h3>
+		<h3>{{ label_operationtype }}</h3>
 	</div>
 	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
 		{{ form.csrf_token }}
@@ -42,14 +42,14 @@
 		            {% endfor %}
 		        {% endif %}
 		    </div>
-		    {% if request.path | is_in('add_scheduled_transaction') %}
+		    {% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
 		    <label class="control-label col-md-2">ends</label>
 	        <div class="col-md-4">
 				{{ form.ends(class_='form-control', id="my-datepicker2", placeholder="Never", onfocus="$('#my-datepicker2').datepicker('setStartDate', document.getElementById('my-datepicker').value)")}}
 		    </div>
 		    {% endif %}
 	    </div>	    
-		{% if request.path | is_in('add_scheduled_transaction') %}
+		{% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
 		<div class="form-group {% if form.every_nb.errors %}has-error{% endif %}">
 	        <label class="control-label col-md-2">{{ form.every_nb.label }}</label>
 	        <div class="col-md-2">
@@ -66,6 +66,18 @@
 	    	    {% for value, label, _ in form.every_type.iter_choices() %}
 		            <label class="radio-inline">
 		                <input type="radio" name="{{ form.every_type.id }}" id="{{ form.every_type.id }}" value="{{ value }}" {% if form.every_type.default == value %}checked{% endif %}>{{ label }}
+		            </label>
+			    {% endfor %}
+		    </div>
+	    </div>
+	    {% endif %}
+	    {% if (request.path | is_in('add_transaction')) or (request.path | is_in('edit_transaction')) %}
+		<div class="form-group {% if form.operation_type.errors %}has-error{% endif %}">
+	        <label class="control-label col-md-2">{{ form.operation_type.label }}</label>
+		    <div class="col-md-10">
+	    	    {% for value, label, _ in form.operation_type.iter_choices() %}
+		            <label class="radio-inline">
+		                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}">{{ label }}
 		            </label>
 			    {% endfor %}
 		    </div>
@@ -117,7 +129,7 @@
 	    </div>
 	    <div class="btn-group pull-right">
 	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
-			<button type="submit" class="btn btn-info">Add {{ operationtype }}</button>
+			<button type="submit" class="btn btn-info">{{ label_operationtype }}</button>
 		</div>
     </form>
 {% endblock body %}

@@ -148,7 +148,8 @@ def transactions(account_id):
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
-    return render_template('transactions.html', data=data, account_id=account_id, **context)
+    return render_template('transactions.html', data=data, several_accounts=(models.Account.query.count() > 1),
+                           account_id=account_id, **context)
 
 
 @app.route('/info_transaction/<int:transaction_id>')
@@ -204,7 +205,7 @@ def add_transaction(account_id, operationtype):
         return redirect('/account/%d/transactions' % account_id)
     return render_template('add_transaction.html',
                            account_id=account_id,
-                           form=form, operationtype=operationtype,
+                           form=form, label_operationtype='Add %s' % operationtype,
                            currency=account.currency,
                            **context)
 
@@ -273,56 +274,11 @@ def edit_transaction(transaction_id):
         form.description.data = transaction.description
         form.category.data = transaction.category
         form.note.data = transaction.note
-    return render_template('edit_transaction.html', 
-                           operationtype='transaction',
+    return render_template('add_transaction.html', 
+                           label_operationtype= 'Edit transaction',
                            account_id=account.id,
                            form=form, currency=account.currency,
                            **context)
-
-
-@app.route('/graphs', methods=['GET', 'POST'])
-def display_graphs():
-    data = pd.read_sql_table('transaction', db.engine)
-
-    def compute(data, start_day, end_day):
-        data = data[(data['date'] >= start_day) & (data['date'] <= end_day)]
-
-        def _donut_data(data):
-            data = data.groupby('category').sum().abs()
-            data = data.sort('amount', ascending=False)
-            donut_data = ''
-            for cat in data.index:
-                donut_data += '{label: "%s", value: %f},' % (cat, data.ix[cat])
-            donut_sum = data.sum()['amount']
-            donut_data = donut_data[:-1]
-            return donut_data, donut_sum
-
-        donutexpenses, donutexpensessum = _donut_data(data=data[data['amount'] < 0][['category', 'amount']])
-        donutincomes, donutincomessum = _donut_data(data=data[data['amount'] >= 0][['category', 'amount']])
-        return donutexpenses, donutexpensessum, donutincomes, donutincomessum
-
-    form = forms.SelectDateRangeForm()
-
-    if form.validate_on_submit():
-        start_day = datetime.datetime.strptime(form.start.data, '%d/%m/%Y')
-        end_day = datetime.datetime.strptime(form.end.data, '%d/%m/%Y')
-    else:
-        now = datetime.datetime.now()
-        start_day, end_day = calendar.monthrange(year=now.year, month=now.month)
-        start_day = datetime.date(now.year, now.month, 1)
-        end_day = datetime.date(now.year, now.month, end_day)
-        form.start.data = start_day.strftime('%d/%m/%Y')
-        form.end.data = end_day.strftime('%d/%m/%Y')
-        
-    donutexpenses, donutexpensessum, donutincomes, donutincomessum = compute(data=data, start_day=start_day, end_day=end_day)
-    return render_template('graphs.html',
-                           donutexpenses=donutexpenses,
-                           donutexpensessum=donutexpensessum,
-                           donutincomes=donutincomes,
-                           donutincomessum=donutincomessum,
-                           form=form,
-                           **context)
-
 
 
 @app.route('/account/<int:account_id>/scheduled_transactions')
@@ -330,6 +286,7 @@ def scheduled_transactions(account_id):
     account = models.Account.query.get(account_id)
     df = pd.read_sql_table('scheduled_transaction', db.engine)
     df = df[df['account'] == account.name]
+    df = df[df['ends'] < datetime.datetime.now()]
     pd.to_datetime(df['next_occurence'])
     df = df.sort('next_occurence')
     df = pd.DataFrame(df.values, columns=df.columns)
@@ -393,7 +350,7 @@ def add_scheduled_transaction(account_id, operationtype):
                            form=form, 
                            account_id=account_id,
                            currency=account.currency,
-                           operationtype='scheduled ' + operationtype,
+                           label_operationtype= 'Add scheduled transaction',
                            **context)
 
 
@@ -473,9 +430,9 @@ def edit_scheduled_transaction(transaction_id):
         form.every_type.data = transaction.every_type
         form.ends.data = transaction.ends
     return render_template('edit_transaction.html',
-                           operationtype='scheduled transaction',
                            account_id=account.id,
                            currency=account.currency,
+                           label_operationtype= 'Add scheduled transaction',
                            form=form,
                            **context)
 
