@@ -11,7 +11,6 @@
 	- fa-home
 - ajouter export csv par category quand graphes
 - multi compte -> compte liquide + transfert n'est pas considere comme depense
-- cheque / cb / achat en ligne / autres 
 - graphs pour chaque compte
 - scheduled transfer
 - edit scheduled transaction, ends does not reset 

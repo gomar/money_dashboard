@@ -54,6 +54,9 @@ context = {'now': datetime.datetime.now(),
 
 @app.route('/')
 def intro():
+    for table in ['transaction', 'account', 'scheduled_transaction', 'transfer']:
+        pd.read_sql_table(table, db.engine).to_excel(os.path.join(app.config['DB_FOLDER'], 
+                                                                '%s.xls' % table))
     return render_template('intro.html')
 
 
@@ -165,6 +168,8 @@ def info_transaction(transaction_id):
 @app.route('/delete_transaction/<int:transaction_id>')
 def delete_transaction(transaction_id):
     transaction = models.Transaction.query.get(transaction_id)
+    if len(transaction.transfer_to):
+        db.session.delete(transaction.transfer_to[0])
     db.session.delete(transaction)
     db.session.commit()
     account_id = models.Account.query\
@@ -200,7 +205,10 @@ def add_transaction(account_id, operationtype):
                                amount=amount,
                                description=form.description.data,
                                category=form.category.data,
-                               note=form.note.data)
+                               note=form.note.data,
+                               operation_type=form.operation_type.data)
+        if form.operation_type.data == 'cheque':
+            u.operation_type = 'cheque # %d' % int(form.cheque_number.data)
         # adding to database
         db.session.add(u)
         db.session.commit()
@@ -227,15 +235,16 @@ def add_transfer(account_id):
                                account=account.name,
                                amount=-amount,
                                description=form.description.data,
-                               category='transfer',
+                               category='Transfer',
                                note=form.note.data)
         b = models.Transaction(date=form.date.data,
                                account=form.account_to.data,
                                amount=amount,
                                description=form.description.data,
-                               category='transfer',
+                               category='Transfer',
                                note=form.note.data,
                                transfer_to=[a])
+        a.transfer_to = [b]
         # adding to database
         db.session.add(a)
         db.session.add(b)
@@ -244,7 +253,7 @@ def add_transfer(account_id):
     return render_template('add_transfer.html',
                            account_id=account_id,
                            account_from=account.name,
-                           operationtype='transfer',
+                           operationtype='Transfer',
                            form=form,
                            currency=account.currency,
                            **context)
@@ -256,8 +265,11 @@ def edit_transaction(transaction_id):
     categories = list_category + ['Misc. Expense', 'Misc. Income']
     categories.sort()
     form.category.choices = zip(categories, categories)
+    form.operation_type.choices = zip(list_operation_type, list_operation_type)
     # getting the transaction element
     transaction = models.Transaction.query.get(transaction_id)
+    if transaction.category == 'Transfer':
+        raise NotImplementedError
     account = models.Account.query.filter(models.Account.name == transaction.account).all()[0]
     if form.validate_on_submit():
         # update the rssfeed column
@@ -266,6 +278,9 @@ def edit_transaction(transaction_id):
         transaction.description = form.description.data
         transaction.category = form.category.data
         transaction.note = form.note.data
+        transaction.operation_type = form.operation_type.data
+        if transaction.operation_type == 'cheque':
+            transaction.operation_type = 'cheque # %d' % form.cheque_number.data 
         db.session.commit()
         account_id = models.Account.query\
             .filter(models.Account.name == transaction.account).all()[0].id
@@ -276,6 +291,11 @@ def edit_transaction(transaction_id):
         form.description.data = transaction.description
         form.category.data = transaction.category
         form.note.data = transaction.note
+        if transaction.operation_type.startswith('cheque'):
+            form.operation_type.data = 'cheque'
+            form.cheque_number.data = transaction.operation_type.split('cheque # ')[1]
+        else:
+            form.operation_type.data = transaction.operation_type
     return render_template('add_transaction.html', 
                            label_operationtype= 'Edit transaction',
                            account_id=account.id,

@@ -12,7 +12,7 @@ class AddTransactionForm(Form):
     note = TextField('note')
     operation_type = RadioField('operation type', default='months', 
                                 validators=[DataRequired()])
-    cheque_number = TextField('cheque_number', validators=[DataRequired(), Regexp('\d*')])
+    cheque_number = TextField('cheque_number', validators=[Regexp('\d*')])
 
 
 class AddScheduledTransactionForm(Form):

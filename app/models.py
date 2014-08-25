@@ -15,6 +15,7 @@ class Transaction(db.Model):
     description = db.Column(db.Text)
     category = db.Column(db.Text)
     note = db.Column(db.Text)
+    operation_type = db.Column(db.Text)
     transfer_to = db.relationship("Transaction", 
                                   secondary=transfer,
                                   primaryjoin=id==transfer.c.from_account,
