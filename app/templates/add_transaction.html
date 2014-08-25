@@ -45,7 +45,7 @@
 		    {% if request.path | is_in('add_scheduled_transaction') %}
 		    <label class="control-label col-md-2">ends</label>
 	        <div class="col-md-4">
-				{{ form.ends(class_='form-control', id="my-datepicker2", placeholder="Never")}}
+				{{ form.ends(class_='form-control', id="my-datepicker2", placeholder="Never", onfocus="$('#my-datepicker2').datepicker('setStartDate', document.getElementById('my-datepicker').value)")}}
 		    </div>
 		    {% endif %}
 	    </div>	    
@@ -132,18 +132,12 @@ $('#my-datepicker').datepicker({
     todayHighlight: true,
     format: "dd/mm/yyyy"
 });
-$("#mySelect").on('change',function(){
-    // alert(this.value)
-    $('#myStartDate').datepicker("remove");
-    mydatepicker();//$('#id-element').datepicker("destroy");
-});
 $('#my-datepicker2').datepicker({
     keyboardNavigation: false,
     forceParse: false,
     autoclose: true,
     todayHighlight: true,
     format: "dd/mm/yyyy",
-    startDate: document.getElementById('my-datepicker').value
 });
 $('.selectpicker').selectpicker({
       style: 'btn-custom'  

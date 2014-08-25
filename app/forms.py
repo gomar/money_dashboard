@@ -22,7 +22,6 @@ class AddScheduledTransactionForm(Form):
     every_type = RadioField('every_type', default='months', choices=zip(['months', 'weeks', 'days'],
                                                        ['months', 'weeks', 'days']), 
                              validators=[DataRequired()])
-    end_boolean = BooleanField('end_boolean')
     ends = DateField('date', format='%d/%m/%Y')
 
 
