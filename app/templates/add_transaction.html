@@ -65,7 +65,7 @@
 		    <div class="col-md-4">
 	    	    {% for value, label, _ in form.every_type.iter_choices() %}
 		            <label class="radio-inline">
-		                <input type="radio" name="{{ form.every_type.id }}" id="{{ form.every_type.id }}" value="{{ value }}" {% if form.every_type.default == value %}checked{% endif %}>{{ label }}
+		                <input type="radio" name="{{ form.every_type.id }}" id="{{ form.every_type.id }}" value="{{ value }}" {% if (form.every_type.default == value) or (form.every_type.data == value) %}checked{% endif %}>{{ label }}
 		            </label>
 			    {% endfor %}
 		    </div>
