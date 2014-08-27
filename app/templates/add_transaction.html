@@ -78,17 +78,17 @@
 	    	    {% for value, label, _ in form.operation_type.iter_choices() %}
 	    	    	{% if label == 'cheque' %}
 		    	    	<label class="radio-inline">
-			                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').show();}">{{ label }}
+			                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').show();}" {% if (form.operation_type.default == value) or (form.operation_type.data == value) %}checked{% endif %}>{{ label }}
 			            </label>
 		            {% else %}
 		            <label class="radio-inline">
-		                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').hide();}">{{ label }}
+		                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').hide();}" {% if (form.operation_type.default == value) or (form.operation_type.data == value) %}checked{% endif %}>{{ label }}
 		            </label>
 		            {% endif %}
 			    {% endfor %}
 		    </div>
 	    </div>
-	    <div class="form-group {% if form.cheque_number.errors %}has-error{% endif %}" style="display: none" id="cheque_number_option" style="display: none">
+	    <div class="form-group {% if form.cheque_number.errors %}has-error{% endif %}" id="cheque_number_option" {% if 'cheque' not in form.operation_type.data %}style="display: none"{% endif %}>
 	    	<label class="control-label col-md-2">cheque #</label>
 		    <div class="col-md-4">
 		    	{{ form.cheque_number(class_='form-control') }}

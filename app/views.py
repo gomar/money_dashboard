@@ -306,7 +306,7 @@ def edit_transaction(transaction_id):
         transaction.note = form.note.data
         transaction.operation_type = form.operation_type.data
         if transaction.operation_type == 'cheque':
-            transaction.operation_type = 'cheque # %d' % form.cheque_number.data 
+            transaction.operation_type = 'cheque # %d' % int(form.cheque_number.data)
         db.session.commit()
         account_id = models.Account.query\
             .filter(models.Account.name == transaction.account).all()[0].id
