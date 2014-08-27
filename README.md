@@ -10,8 +10,8 @@
 	- fa-question-circle
 	- fa-home
 - ajouter export csv par category quand graphes
-- multi compte -> compte liquide + transfert n'est pas considere comme depense
 - graphs pour chaque compte
 - scheduled transfer
-- transfer is an operation type not a category 
 - cheque number should be a new field
+- check that account name does not exists when creating the account
+- edit transfer

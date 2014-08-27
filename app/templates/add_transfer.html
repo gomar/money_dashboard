@@ -27,7 +27,7 @@
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>Add a {{ operationtype }}</h3>
+		<h3>Add {{ operationtype }}</h3>
 	</div>
 	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
 		{{ form.csrf_token }}

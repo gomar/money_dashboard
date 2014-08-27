@@ -261,13 +261,13 @@ def add_transfer(account_id):
                                account=account.name,
                                amount=-amount,
                                description=form.description.data,
-                               category='Transfer',
+                               operation_type='transfer',
                                note=form.note.data)
         b = models.Transaction(date=form.date.data,
                                account=form.account_to.data,
                                amount=amount,
                                description=form.description.data,
-                               category='Transfer',
+                               operation_type='transfer',
                                note=form.note.data,
                                transfer_to=[a])
         a.transfer_to = [b]
@@ -294,7 +294,7 @@ def edit_transaction(transaction_id):
     form.operation_type.choices = zip(list_operation_type, list_operation_type)
     # getting the transaction element
     transaction = models.Transaction.query.get(transaction_id)
-    if transaction.category == 'Transfer':
+    if transaction.operation_type == 'transfer':
         raise NotImplementedError
     account = models.Account.query.filter(models.Account.name == transaction.account).all()[0]
     if form.validate_on_submit():
