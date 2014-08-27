@@ -14,3 +14,4 @@
 - graphs pour chaque compte
 - scheduled transfer
 - transfer is an operation type not a category 
+- cheque number should be a new field

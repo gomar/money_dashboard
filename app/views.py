@@ -185,10 +185,9 @@ def transactions(account_id):
 
 @app.route('/info_transaction/<int:transaction_id>')
 def info_transaction(transaction_id):
-    data = pd.read_sql_table('transaction', db.engine)
-    note = data[data['id'] == transaction_id]['note']
+    note = models.Transaction.query.get(transaction_id).note
     return render_template('info_transaction.html', 
-                           note=note.iloc[0],
+                           note=note,
                            **context)
 
 
