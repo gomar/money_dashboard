@@ -117,9 +117,17 @@ def add_account():
 @app.route('/delete_account/<int:account_id>')
 def delete_account(account_id):
     account = models.Account.query.get(account_id)
+
+    # deleting all transactions
     transactions = models.Transaction.query.filter(models.Transaction.account == account.name).all()
     for transaction in transactions:
         db.session.delete(transaction)
+
+    # deleting all scheduled transactions
+    scheduled_transactions = models.ScheduledTransaction.query.filter(models.Transaction.account == account.name).all()
+    for s_transaction in scheduled_transactions:
+        db.session.delete(s_transaction)
+
     db.session.delete(account)
     db.session.commit()
     return redirect('/accounts')
