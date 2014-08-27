@@ -1,10 +1,12 @@
 import os, datetime, calendar, time, dateutil
+from dateutil.relativedelta import relativedelta
 from flask import render_template, Flask, redirect, flash
 from flask.ext.sqlalchemy import SQLAlchemy
 import pandas as pd
 import numpy as np
 import forms
 from app import app, db, models, utils
+from itertools import count
 
 
 list_category = ['Vehicle', 
@@ -63,13 +65,30 @@ def intro():
 @app.route('/accounts')
 def home():
     accounts = pd.read_sql_table('account', db.engine)
-    transactions = pd.read_sql_table('transaction', db.engine,columns=['account', 'amount']) 
+    transactions = pd.read_sql_table('transaction', db.engine, columns=['account', 'amount'])
+    scheduled_transactions = pd.read_sql_table('scheduled_transaction', 
+                                               db.engine) 
+
     transactions = transactions.rename(columns={'account': 'name'})
     transactions = transactions.groupby('name', as_index=False).sum()
     accounts['amount'] = accounts['reconciled_balance']
     for name in transactions.name:
         accounts.ix[accounts['name'] == name, 'amount'] += \
             transactions.ix[transactions.name == name, 'amount'].iloc[-1]
+    # taking scheduled transactions into account
+    accounts['end_of_month_amount'] = accounts['amount']
+    for name in transactions.name:
+        for idx, operation in scheduled_transactions.iterrows():
+            i = 0
+            today = datetime.datetime.now()
+            last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
+            while operation.next_occurence \
+                + relativedelta(**{operation.every_type: i * operation.every_nb}) \
+                <= last_day_of_month:
+                i += 1
+            accounts.ix[accounts['name'] == operation.account, 'end_of_month_amount'] += \
+                operation.amount * i
+            print i
     return render_template('accounts.html', 
                            accounts=accounts.T.to_dict(),
                            **context)
@@ -388,7 +407,7 @@ def create_scheduled_transaction(transaction_id):
     # adding new transaction to database
     db.session.add(u)
     s_transaction.next_occurence = s_transaction.next_occurence + \
-        dateutil.relativedelta.relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
+        relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
     db.session.commit()
     account_id = models.Account.query\
             .filter(models.Account.name == s_transaction.account).all()[0].id
@@ -400,7 +419,7 @@ def create_scheduled_transaction(transaction_id):
 def skip_scheduled_transaction(transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     s_transaction.next_occurence = s_transaction.next_occurence + \
-        dateutil.relativedelta.relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
+        relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
     db.session.commit()
     account_id = models.Account.query\
             .filter(models.Account.name == s_transaction.account).all()[0].id
@@ -451,10 +470,10 @@ def edit_scheduled_transaction(transaction_id):
         form.every_nb.data = str(transaction.every_nb)
         form.every_type.data = transaction.every_type
         form.ends.data = transaction.ends
-    return render_template('edit_transaction.html',
+    return render_template('add_transaction.html', 
                            account_id=account.id,
                            currency=account.currency,
-                           label_operationtype= 'Add scheduled transaction',
+                           label_operationtype= 'Edit scheduled transaction',
                            form=form,
                            **context)
 
