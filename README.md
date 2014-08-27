@@ -13,4 +13,4 @@
 - multi compte -> compte liquide + transfert n'est pas considere comme depense
 - graphs pour chaque compte
 - scheduled transfer
-- edit scheduled transaction, ends does not reset 
+- transfer is an operation type not a category 
