@@ -2,6 +2,7 @@ import os, datetime, calendar, time, dateutil
 from dateutil.relativedelta import relativedelta
 from flask import render_template, Flask, redirect, flash
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 import pandas as pd
 import numpy as np
 import forms
@@ -30,7 +31,10 @@ def update_waiting_scheduled_transactions():
     if os.path.exists(app.config['DB_FNAME']):
         return models.ScheduledTransaction.query\
                     .filter(models.ScheduledTransaction.next_occurence
-                            <= datetime.datetime.now()).count()
+                            <= datetime.datetime.now())\
+                    .filter(or_(models.ScheduledTransaction.ends
+                            < datetime.datetime.now(),
+                            models.ScheduledTransaction.ends == None)).count()
     else:
         return 0
 
@@ -88,7 +92,6 @@ def home():
                 i += 1
             accounts.ix[accounts['name'] == operation.account, 'end_of_month_amount'] += \
                 operation.amount * i
-            print i
     return render_template('accounts.html', 
                            accounts=accounts.T.to_dict(),
                            **context)
@@ -162,9 +165,9 @@ def transactions(account_id):
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
+
     # adding the total amount
     currency = '(<i class="fa fa-%s"></i>)' % account.currency
-
     data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1] + float(account.reconciled_balance)
 
     # replacing amount by in and out for easier reading
@@ -179,7 +182,8 @@ def transactions(account_id):
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
-    return render_template('transactions.html', data=data, several_accounts=(models.Account.query.count() > 1),
+    return render_template('transactions.html', data=data, 
+                           several_accounts=(models.Account.query.count() > 1),
                            account_id=account_id, **context)
 
 
@@ -205,9 +209,9 @@ def delete_transaction(transaction_id):
 
 @app.route('/account/<int:account_id>/add_transaction/<operationtype>', methods=['GET', 'POST'])
 def add_transaction(account_id, operationtype):
-    account = models.Account.query.get(account_id)
     if operationtype == 'transfer':
         return redirect('/account/%d/add_transfer' % account_id)
+
     form = forms.AddTransactionForm()
 
     # adding an extra category depending on type of operation
@@ -218,13 +222,20 @@ def add_transaction(account_id, operationtype):
     categories = list_category + [additional_category]
     categories.sort()
     form.category.choices = zip(categories, categories)
+
+    # setting operation_type_choices
     form.operation_type.choices = zip(list_operation_type, list_operation_type)
 
+    account = models.Account.query.get(account_id)
+
     if form.validate_on_submit():
+        # whatever the entry, if debit, the amount is negative
+        # if credit, it is positive
         if operationtype == 'debit':
             amount = -abs(float(form.amount.data))
         elif operationtype == 'credit':
             amount = abs(float(form.amount.data))
+
         # creating database entry
         u = models.Transaction(date=form.date.data,
                                account=account.name,
@@ -233,12 +244,15 @@ def add_transaction(account_id, operationtype):
                                category=form.category.data,
                                note=form.note.data,
                                operation_type=form.operation_type.data)
+
         if form.operation_type.data == 'cheque':
-            u.operation_type = 'cheque # %d' % int(form.cheque_number.data)
+            u.cheque_number = int(form.cheque_number.data)
+
         # adding to database
         db.session.add(u)
         db.session.commit()
         return redirect('/account/%d/transactions' % account_id)
+
     return render_template('add_transaction.html',
                            account_id=account_id,
                            form=form, label_operationtype='Add %s' % operationtype,
@@ -261,16 +275,18 @@ def add_transfer(account_id):
                                account=account.name,
                                amount=-amount,
                                description=form.description.data,
-                               operation_type='transfer',
-                               note=form.note.data)
+                               note=form.note.data,
+                               operation_type='transfer')
+
         b = models.Transaction(date=form.date.data,
                                account=form.account_to.data,
                                amount=amount,
                                description=form.description.data,
-                               operation_type='transfer',
                                note=form.note.data,
+                               operation_type='transfer',
                                transfer_to=[a])
         a.transfer_to = [b]
+
         # adding to database
         db.session.add(a)
         db.session.add(b)
@@ -288,17 +304,22 @@ def add_transfer(account_id):
 @app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
 def edit_transaction(transaction_id):
     form = forms.AddTransactionForm()
+
+    # setting categories choice
     categories = list_category + ['Misc. Expense', 'Misc. Income']
     categories.sort()
     form.category.choices = zip(categories, categories)
     form.operation_type.choices = zip(list_operation_type, list_operation_type)
-    # getting the transaction element
+
+    # getting the transaction that is edited
     transaction = models.Transaction.query.get(transaction_id)
+
     if transaction.operation_type == 'transfer':
         raise NotImplementedError
+
     account = models.Account.query.filter(models.Account.name == transaction.account).all()[0]
+
     if form.validate_on_submit():
-        # update the rssfeed column
         transaction.date = form.date.data
         transaction.amount = form.amount.data
         transaction.description = form.description.data
@@ -306,22 +327,18 @@ def edit_transaction(transaction_id):
         transaction.note = form.note.data
         transaction.operation_type = form.operation_type.data
         if transaction.operation_type == 'cheque':
-            transaction.operation_type = 'cheque # %d' % int(form.cheque_number.data)
+            transaction.cheque_number = int(form.cheque_number.data)
         db.session.commit()
-        account_id = models.Account.query\
-            .filter(models.Account.name == transaction.account).all()[0].id
-        return redirect('/account/%d/transactions' % account_id)
+        return redirect('/account/%d/transactions' % account.id)
     else:
         form.date.data = transaction.date
         form.amount.data = '%.2f' % transaction.amount
         form.description.data = transaction.description
         form.category.data = transaction.category
         form.note.data = transaction.note
-        if transaction.operation_type.startswith('cheque'):
-            form.operation_type.data = 'cheque'
-            form.cheque_number.data = transaction.operation_type.split('cheque # ')[1]
-        else:
-            form.operation_type.data = transaction.operation_type
+        form.operation_type.data = transaction.operation_type
+        if transaction.operation_type == 'cheque':
+            form.cheque_number.data = transaction.cheque_number
     return render_template('add_transaction.html', 
                            label_operationtype= 'Edit transaction',
                            account_id=account.id,
@@ -334,12 +351,13 @@ def scheduled_transactions(account_id):
     account = models.Account.query.get(account_id)
     df = pd.read_sql_table('scheduled_transaction', db.engine)
     df = df[df['account'] == account.name]
-    df = df[df['ends'] < datetime.datetime.now()]
+    df = df[(df['ends'] < datetime.datetime.now()) | pd.isnull(df['ends'])]
     pd.to_datetime(df['next_occurence'])
     df = df.sort('next_occurence')
     df = pd.DataFrame(df.values, columns=df.columns)
     df_dict = df.T.to_dict()
     scheduled_transactions = [df_dict[i] for i in range(len(df_dict))]
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
     return render_template('scheduled_transactions.html', 
                            scheduled_transactions=scheduled_transactions,
                            account_id=account_id,
@@ -373,7 +391,7 @@ def add_scheduled_transaction(account_id, operationtype):
     categories.sort()
     form.category.choices = zip(categories, categories)
 
-    if form.validate_on_submit():
+    if form.is_submitted():
         if operationtype == 'debit':
             amount = -abs(float(form.amount.data))
         elif operationtype == 'credit':
@@ -406,19 +424,25 @@ def add_scheduled_transaction(account_id, operationtype):
 def create_scheduled_transaction(transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     u = models.Transaction(date=s_transaction.next_occurence,
-                           amount=s_transaction.amount,
                            account=s_transaction.account,
+                           amount=s_transaction.amount,
                            description=s_transaction.description,
+                           operation_type='other',
                            category=s_transaction.category,
                            note=s_transaction.note)
+
     # adding new transaction to database
     db.session.add(u)
+
+    # updating scheduled transaction next occurence
     s_transaction.next_occurence = s_transaction.next_occurence + \
         relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
     db.session.commit()
+
     account_id = models.Account.query\
             .filter(models.Account.name == s_transaction.account).all()[0].id
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
@@ -436,10 +460,9 @@ def skip_scheduled_transaction(transaction_id):
 
 @app.route('/info_scheduled_transaction/<int:transaction_id>')
 def info_scheduled_transaction(transaction_id):
-    data = pd.read_sql_table('scheduled_transaction', db.engine)
-    note = data[data['id'] == transaction_id]['note']
+    s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     return render_template('info_transaction.html', 
-                           note=note.iloc[0],
+                           note=s_transaction.note,
                            **context)
 
 
@@ -455,7 +478,7 @@ def edit_scheduled_transaction(transaction_id):
     account = models.Account.query\
         .filter(models.Account.name == transaction.account).all()[0]
 
-    if form.is_submitted():
+    if form.validate_on_submit():
         # update the rssfeed column
         transaction.next_occurence = form.date.data
         transaction.amount = form.amount.data
@@ -465,6 +488,7 @@ def edit_scheduled_transaction(transaction_id):
         transaction.every_nb = int(form.every_nb.data)
         transaction.every_type = form.every_type.data
         transaction.ends = form.ends.data
+        transaction.operation_type = 'other'
         db.session.commit()
         context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
         return redirect('/account/%d/scheduled_transactions' % account.id)
@@ -477,6 +501,7 @@ def edit_scheduled_transaction(transaction_id):
         form.every_nb.data = str(transaction.every_nb)
         form.every_type.data = transaction.every_type
         form.ends.data = transaction.ends
+        form.operation_type.data = transaction.operation_type
     return render_template('add_transaction.html', 
                            account_id=account.id,
                            currency=account.currency,
