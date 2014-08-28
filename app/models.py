@@ -16,6 +16,7 @@ class Transaction(db.Model):
     category = db.Column(db.Text)
     note = db.Column(db.Text)
     operation_type = db.Column(db.Text)
+    cheque_number = db.Column(db.Integer)
     transfer_to = db.relationship("Transaction", 
                                   secondary=transfer,
                                   primaryjoin=id==transfer.c.from_account,
