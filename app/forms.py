@@ -21,7 +21,7 @@ class AddScheduledTransactionForm(Form):
     description = TextField('description', validators=[DataRequired(), length(max=30)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
-    every_nb = TextField('every', default=1, validators=[])
+    every_nb = TextField('every', default=1, validators=[DataRequired()])
     every_type = RadioField('every_type', default='months', choices=zip(['months', 'weeks', 'days'],
                                                        ['months', 'weeks', 'days']), 
                              validators=[DataRequired()])
