@@ -240,9 +240,9 @@ def add_transaction(account_id, operationtype):
         u = models.Transaction(date=form.date.data,
                                account=account.name,
                                amount=amount,
-                               description=form.description.data,
+                               description=form.description.data.upper(),
                                category=form.category.data,
-                               note=form.note.data,
+                               note=form.note.data.upper(),
                                operation_type=form.operation_type.data)
 
         if form.operation_type.data == 'cheque':
@@ -274,15 +274,17 @@ def add_transfer(account_id):
         a = models.Transaction(date=form.date.data,
                                account=account.name,
                                amount=-amount,
-                               description=form.description.data,
-                               note=form.note.data,
+                               description=form.description.data.upper(),
+                               category='Transfer',
+                               note=form.note.data.upper(),
                                operation_type='transfer')
 
         b = models.Transaction(date=form.date.data,
                                account=form.account_to.data,
                                amount=amount,
-                               description=form.description.data,
-                               note=form.note.data,
+                               description=form.description.data.upper(),
+                               category='Transfer',
+                               note=form.note.data.upper(),
                                operation_type='transfer',
                                transfer_to=[a])
         a.transfer_to = [b]
@@ -322,9 +324,9 @@ def edit_transaction(transaction_id):
     if form.validate_on_submit():
         transaction.date = form.date.data
         transaction.amount = form.amount.data
-        transaction.description = form.description.data
+        transaction.description = form.description.data.upper()
         transaction.category = form.category.data
-        transaction.note = form.note.data
+        transaction.note = form.note.data.upper()
         transaction.operation_type = form.operation_type.data
         if transaction.operation_type == 'cheque':
             transaction.cheque_number = int(form.cheque_number.data)
@@ -400,9 +402,9 @@ def add_scheduled_transaction(account_id, operationtype):
         u = models.ScheduledTransaction(next_occurence=form.date.data,
                                         amount=amount,
                                         account=account.name,
-                                        description=form.description.data,
+                                        description=form.description.data.upper(),
                                         category=form.category.data,
-                                        note=form.note.data,
+                                        note=form.note.data.upper(),
                                         every_nb=form.every_nb.data, 
                                         every_type=form.every_type.data,
                                         ends=form.ends.data)
@@ -426,10 +428,10 @@ def create_scheduled_transaction(transaction_id):
     u = models.Transaction(date=s_transaction.next_occurence,
                            account=s_transaction.account,
                            amount=s_transaction.amount,
-                           description=s_transaction.description,
+                           description=s_transaction.description.upper(),
                            operation_type='other',
                            category=s_transaction.category,
-                           note=s_transaction.note)
+                           note=s_transaction.note.upper())
 
     # adding new transaction to database
     db.session.add(u)
@@ -482,13 +484,12 @@ def edit_scheduled_transaction(transaction_id):
         # update the rssfeed column
         transaction.next_occurence = form.date.data
         transaction.amount = form.amount.data
-        transaction.description = form.description.data
+        transaction.description = form.description.data.upper()
         transaction.category = form.category.data
-        transaction.note = form.note.data
+        transaction.note = form.note.data.upper()
         transaction.every_nb = int(form.every_nb.data)
         transaction.every_type = form.every_type.data
         transaction.ends = form.ends.data
-        transaction.operation_type = 'other'
         db.session.commit()
         context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
         return redirect('/account/%d/scheduled_transactions' % account.id)
@@ -501,7 +502,6 @@ def edit_scheduled_transaction(transaction_id):
         form.every_nb.data = str(transaction.every_nb)
         form.every_type.data = transaction.every_type
         form.ends.data = transaction.ends
-        form.operation_type.data = transaction.operation_type
     return render_template('add_transaction.html', 
                            account_id=account.id,
                            currency=account.currency,
