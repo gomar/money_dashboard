@@ -1,6 +1,6 @@
 import os, datetime, calendar, time, dateutil
 from dateutil.relativedelta import relativedelta
-from flask import render_template, Flask, redirect, flash
+from flask import render_template, Flask, redirect, flash, abort
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 import pandas as pd
@@ -317,7 +317,7 @@ def edit_transaction(transaction_id):
     transaction = models.Transaction.query.get(transaction_id)
 
     if transaction.operation_type == 'transfer':
-        raise NotImplementedError
+        abort(404)
 
     account = models.Account.query.filter(models.Account.name == transaction.account).all()[0]
 

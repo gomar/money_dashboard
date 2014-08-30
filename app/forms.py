@@ -2,17 +2,22 @@ from flask_wtf import Form
 from wtforms import TextField, DateField, SelectField, RadioField, BooleanField
 from wtforms.validators import DataRequired, length, ValidationError, NumberRange, Regexp
 from unidecode import unidecode
+import pandas as pd
 
 
 class AddTransactionForm(Form):
     date = DateField('date', format='%d/%m/%Y', validators=[DataRequired()])
-    amount = TextField('amount', validators=[DataRequired()])
+    amount = TextField('amount', validators=[Regexp(regex='\d+[\.\d*]*', 
+                                                    message='Should be a numerical value using . as a separator'), 
+                                             DataRequired()])
     description = TextField('description', validators=[DataRequired(), length(max=30)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
     operation_type = RadioField('operation type', default='months', 
                                 validators=[DataRequired()])
     cheque_number = TextField('cheque_number', validators=[Regexp('\d*')])
+    # def validate_amount(form, field):
+    #     raise ValidationError('test')
 
 
 class AddScheduledTransactionForm(Form):

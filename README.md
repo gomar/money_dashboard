@@ -12,6 +12,6 @@
 - ajouter export csv par category quand graphes
 - graphs pour chaque compte
 - scheduled transfer
-- cheque number should be a new field
 - check that account name does not exists when creating the account
-- edit transfer
+- add validations for each field in the form
+- macro to simplify error catching and printing in add transaction
