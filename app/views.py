@@ -81,7 +81,7 @@ def home():
             transactions.ix[transactions.name == name, 'amount'].iloc[-1]
     # taking scheduled transactions into account
     accounts['end_of_month_amount'] = accounts['amount']
-    for name in transactions.name:
+    for name in accounts.name:
         for idx, operation in scheduled_transactions.iterrows():
             i = 0
             today = datetime.datetime.now()
@@ -480,7 +480,7 @@ def edit_scheduled_transaction(transaction_id):
     account = models.Account.query\
         .filter(models.Account.name == transaction.account).all()[0]
 
-    if form.validate_on_submit():
+    if form.is_submitted():
         # update the rssfeed column
         transaction.next_occurence = form.date.data
         transaction.amount = form.amount.data
