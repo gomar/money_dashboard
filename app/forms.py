@@ -7,7 +7,7 @@ import pandas as pd
 
 class AddTransactionForm(Form):
     date = DateField('date', format='%d/%m/%Y', validators=[DataRequired()])
-    amount = TextField('amount', validators=[Regexp(regex='\d+[\.\d*]*', 
+    amount = TextField('amount', validators=[Regexp(regex='[-]*\d+[\.\d*]*', 
                                                     message='Should be a numerical value using . as a separator'), 
                                              DataRequired()])
     description = TextField('description', validators=[DataRequired(), length(max=30)])

@@ -33,7 +33,7 @@ def update_waiting_scheduled_transactions():
                     .filter(models.ScheduledTransaction.next_occurence
                             <= datetime.datetime.now())\
                     .filter(or_(models.ScheduledTransaction.ends
-                            < datetime.datetime.now(),
+                            > datetime.datetime.now(),
                             models.ScheduledTransaction.ends == None)).count()
     else:
         return 0
@@ -145,7 +145,7 @@ def transactions(account_id):
     pd.set_option('display.max_colwidth', 1000)
 
     data[' '] = ('<div class="dropdown">'
-                 '    <button class="btn btn-primary btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">'
+                 '    <button class="btn btn-default btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">'
                  '         <i class="fa fa-cog"></i>'
                  '    </button>'
                  '<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">')
@@ -255,7 +255,7 @@ def add_transaction(account_id, operationtype):
 
     return render_template('add_transaction.html',
                            account_id=account_id,
-                           form=form, label_operationtype='Add %s' % operationtype,
+                           form=form, label_operationtype=label_operationtype,
                            currency=account.currency,
                            **context)
 
@@ -353,7 +353,7 @@ def scheduled_transactions(account_id):
     account = models.Account.query.get(account_id)
     df = pd.read_sql_table('scheduled_transaction', db.engine)
     df = df[df['account'] == account.name]
-    df = df[(df['ends'] < datetime.datetime.now()) | pd.isnull(df['ends'])]
+    df = df[(df['ends'] > datetime.datetime.now()) | pd.isnull(df['ends'])]
     pd.to_datetime(df['next_occurence'])
     df = df.sort('next_occurence')
     df = pd.DataFrame(df.values, columns=df.columns)
