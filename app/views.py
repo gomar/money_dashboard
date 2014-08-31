@@ -255,7 +255,7 @@ def add_transaction(account_id, operationtype):
 
     return render_template('add_transaction.html',
                            account_id=account_id,
-                           form=form, label_operationtype=label_operationtype,
+                           form=form, label_operationtype= 'Add %s' % operationtype,
                            currency=account.currency,
                            **context)
 
