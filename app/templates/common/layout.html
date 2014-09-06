@@ -23,12 +23,12 @@
               <ul class="nav navbar-nav navbar-right">
                 <li class="navbar-text"><small>{{ request.path | account_name() }}</small></li>
                 <li {% if request.path | is_in('add_transaction') %}class="active"{% endif %}>
-                    <a href="/account/{{ account_id }}/transactions">
+                    <a href="/account/{{ account_id }}/transactions" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="Transactions">
                     <i class="fa fa-table"></i>
                     </a>
                 </li>
                 <li {% if request.path | is_in('add_scheduled_transaction') %}class="active"{% endif %}>
-                  <a href="/account/{{ account_id }}/scheduled_transactions">
+                  <a href="/account/{{ account_id }}/scheduled_transactions" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="Scheduled transactions">
                       <i class="fa fa-clock-o"></i>
                       {% if waiting_scheduled_transactions > 0 %}
                       <sup><span class="label label-danger">{{ waiting_scheduled_transactions }}</span></sup>

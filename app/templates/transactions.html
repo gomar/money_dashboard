@@ -3,7 +3,7 @@
     <link href="{{ url_for('static', filename='css/bootstrap-dialog.css') }}" rel="stylesheet">
     <style type="text/css">
     .table {
-        font-size: 13px 
+        font-size: 14px 
     }
     </style>
 {% endblock %}
@@ -77,6 +77,9 @@
                 type: 'type-info',
                 message: $('<div></div>').load(link)
             });
+        });
+        $(function () {
+            $("[rel='tooltip']").tooltip();
         });
     </script>
 {% endblock %}

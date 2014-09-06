@@ -21,6 +21,19 @@ list_category = ['Vehicle',
                  'Salary',
                  'Tax']
 
+dict_category2icon = {'Vehicle': 'fa-car', 
+'Household Bills & Utilities': 'fa-dollar', 
+'Home & Garden': 'fa-home',
+'Day to Day': 'fa-shopping-cart',
+'Leisure & Holidays': 'fa-glass',
+'Clothing & Grooming': '', 
+'Healthcare': 'fa-medkit',
+'Childcare & Education': 'fa-child',
+'Salary': 'fa-plus',
+'Tax': 'fa-gavel',
+'Misc. Income': 'fa-question-circle',
+'Misc. Expense': 'fa-question-circle'}
+
 list_currency = [('euro', u'Euro (<i class="fa fa-euro"></i>)'), 
                  ('gbp', u'British pound (<i class="fa fa-gbp"></i>)')]
 
@@ -144,24 +157,26 @@ def transactions(account_id):
 
     pd.set_option('display.max_colwidth', 1000)
 
-    data[' '] = ('<div class="dropdown">'
+    data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
+
+    data['action'] = ('<div class="dropdown">'
                  '    <button class="btn btn-default btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">'
                  '         <i class="fa fa-cog"></i>'
                  '    </button>'
                  '<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">')
-    data[' '] += np.where(data['note'] != '', 
+    data['action'] += np.where(data['note'] != '', 
                           ('<li role="presentation">'
                            '<a role="menuitem" tabindex="-1" href="/info_transaction/' + data['id'].astype(str) + 
                            '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
                            '</li>'),
                           '')
-    data[' '] += ('<li role="presentation">'
+    data['action'] += ('<li role="presentation">'
                   '<a role="menuitem" tabindex="-1" href="/edit_transaction/' + data['id'].astype(str) + 
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
-    data[' '] += ('<li role="presentation">'
+    data['action'] += ('<li role="presentation">'
                   '<a role="menuitem" tabindex="-1" href="/delete_transaction/' + data['id'].astype(str) + 
                   '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
-    data[' '] += '</ul></div>'
+    data['action'] += '</ul></div>'
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
@@ -171,13 +186,13 @@ def transactions(account_id):
     data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1] + float(account.reconciled_balance)
 
     # replacing amount by in and out for easier reading
-    data['in %s' % currency] = data[data['amount'] >= 0]['amount']
-    data['out %s' % currency] = data[data['amount'] < 0]['amount']
+    data['amount %s' % currency] = np.nan
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-angle-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-angle-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
 
     # displaying the pandas data as an html table
-    data = data[[' ', 'date', 'description', 'category', 
-                 'in %s' % currency, 
-                 'out %s' % currency, 
+    data = data[['action', 'date', 'description', 'category', 
+                 'amount %s' % currency, 
                  'balance  %s' % currency]]
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 

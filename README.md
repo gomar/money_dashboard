@@ -1,8 +1,6 @@
 # TODO
 - highlight first line of table
 - logo pour categories:
-	- fa-child
-	- fa-car
 	- fa-shopping-cart
 	- fa-smile-o  fa-glass fa-picture-o fa-cutlery
 	- fa-money fa-credit-card
