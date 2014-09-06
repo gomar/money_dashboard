@@ -1,12 +1,4 @@
 # TODO
-- highlight first line of table
-- logo pour categories:
-	- fa-shopping-cart
-	- fa-smile-o  fa-glass fa-picture-o fa-cutlery
-	- fa-money fa-credit-card
-	- fa-heart fa-plus-square
-	- fa-question-circle
-	- fa-home
 - ajouter export csv par category quand graphes
 - graphs pour chaque compte
 - scheduled transfer
@@ -14,6 +6,6 @@
 - add validations for each field in the form
 - macro to simplify error catching and printing in add transaction
 - solde final mis en avant
-- espace colonnes chiffres / reduire la police
 - mettre CB / cheque dans tableau de bord
 - credit / debit icone devant header
+- edit transaction: ajouter next cheque
