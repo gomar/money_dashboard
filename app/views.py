@@ -8,6 +8,7 @@ import numpy as np
 import forms
 from app import app, db, models, utils
 from itertools import count
+from sqlalchemy import desc
 
 
 list_category = ['Vehicle', 
@@ -26,7 +27,7 @@ dict_category2icon = {'Vehicle': 'fa-car',
 'Home & Garden': 'fa-home',
 'Day to Day': 'fa-shopping-cart',
 'Leisure & Holidays': 'fa-glass',
-'Clothing & Grooming': '', 
+'Clothing & Grooming': 'fa-heart-o', 
 'Healthcare': 'fa-medkit',
 'Childcare & Education': 'fa-child',
 'Salary': 'fa-plus',
@@ -230,7 +231,8 @@ def delete_transaction(transaction_id):
 def add_transaction(account_id, operationtype):
     if operationtype == 'transfer':
         return redirect('/account/%d/add_transfer' % account_id)
-
+    
+    account = models.Account.query.get(account_id)
     form = forms.AddTransactionForm()
 
     # adding an extra category depending on type of operation
@@ -246,8 +248,6 @@ def add_transaction(account_id, operationtype):
     form.operation_type.choices = zip(list_operation_type, list_operation_type)
     if operationtype == 'credit':
         form.operation_type.data = list_operation_type[-1]
-
-    account = models.Account.query.get(account_id)
 
     if form.validate_on_submit():
         # whatever the entry, if debit, the amount is negative
@@ -273,6 +273,18 @@ def add_transaction(account_id, operationtype):
         db.session.add(u)
         db.session.commit()
         return redirect('/account/%d/transactions' % account_id)
+    else:
+        previous_cheque_nb = models.Transaction.query.filter(models.Transaction.account == account.name)\
+                                                 .filter(models.Transaction.cheque_number != None)\
+                                                 .order_by(desc(models.Transaction.date)).all()
+
+        if previous_cheque_nb:
+            previous_cheque_nb = previous_cheque_nb[0].cheque_number
+        else:
+            previous_cheque_nb = 0
+
+        if operationtype == 'debit':
+            form.cheque_number.data = str(int(previous_cheque_nb) + 1)
 
     return render_template('add_transaction.html',
                            account_id=account_id,
