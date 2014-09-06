@@ -13,8 +13,7 @@ class AddTransactionForm(Form):
     description = TextField('description', validators=[DataRequired(), length(max=30)])
     category = SelectField('category', validators=[DataRequired()])
     note = TextField('note')
-    operation_type = RadioField('operation type', default='months', 
-                                validators=[DataRequired()])
+    operation_type = RadioField('operation type', validators=[DataRequired()])
     cheque_number = TextField('cheque_number', validators=[Regexp('\d*')])
     # def validate_amount(form, field):
     #     raise ValidationError('test')

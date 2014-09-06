@@ -53,8 +53,12 @@ def update_waiting_scheduled_transactions():
 
 def is_in(url, target):
     url = url.split('/')
-    url.remove('')
-    return target in url
+    if '' in url:
+        url.remove('')
+    target = target.split('/')
+    if '' in target:
+        target.remove('')
+    return len(set(target) & set(url)) == len(target)
 
 def account_name(url):
     url = url.split('/')
@@ -240,6 +244,8 @@ def add_transaction(account_id, operationtype):
 
     # setting operation_type_choices
     form.operation_type.choices = zip(list_operation_type, list_operation_type)
+    if operationtype == 'credit':
+        form.operation_type.data = list_operation_type[-1]
 
     account = models.Account.query.get(account_id)
 

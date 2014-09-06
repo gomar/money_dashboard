@@ -71,7 +71,7 @@
 		    </div>
 	    </div>
 	    {% endif %}
-	    {% if (request.path | is_in('add_transaction')) or (request.path | is_in('edit_transaction')) %}
+	    {% if (request.path | is_in('add_transaction/debit')) or (request.path | is_in('edit_transaction')) %}
 		<div class="form-group {% if form.operation_type.errors %}has-error{% endif %}">
 	        <label class="control-label col-md-2">{{ form.operation_type.label }}</label>
 		    <div class="form-inline col-md-10">
