@@ -107,7 +107,6 @@ def home():
             + relativedelta(**{operation.every_type: i * operation.every_nb}) \
             <= last_day_of_month:
             i += 1
-        print i
         accounts.ix[accounts['name'] == operation.account, 'end_of_month_amount'] += \
             operation.amount * i
     return render_template('accounts.html', 
@@ -164,22 +163,22 @@ def transactions(account_id):
 
     data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
-    data['action'] = ('<div class="dropdown">'
-                 '    <button class="btn btn-default btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">'
+    data['action'] = ('<div class="btn-group">'
+                 '    <button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
                  '         <i class="fa fa-cog"></i>'
                  '    </button>'
-                 '<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">')
+                 '<ul class="dropdown-menu" role="menu">')
     data['action'] += np.where(data['note'] != '', 
-                          ('<li role="presentation">'
-                           '<a role="menuitem" tabindex="-1" href="/info_transaction/' + data['id'].astype(str) + 
-                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                          ('<li>'
+                           '<a href="/info_transaction/' + data['id'].astype(str) + 
+                           '" class="transactioninfo"><span><i class="fa fa-info fa-fw"></i> Information</span></a>'
                            '</li>'),
                           '')
-    data['action'] += ('<li role="presentation">'
-                  '<a role="menuitem" tabindex="-1" href="/edit_transaction/' + data['id'].astype(str) + 
+    data['action'] += ('<li>'
+                  '<a href="/edit_transaction/' + data['id'].astype(str) + 
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
-    data['action'] += ('<li role="presentation">'
-                  '<a role="menuitem" tabindex="-1" href="/delete_transaction/' + data['id'].astype(str) + 
+    data['action'] += ('<li>'
+                  '<a href="/delete_transaction/' + data['id'].astype(str) + 
                   '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
     data['action'] += '</ul></div>'
 
