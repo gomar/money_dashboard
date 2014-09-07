@@ -99,17 +99,17 @@ def home():
             transactions.ix[transactions.name == name, 'amount'].iloc[-1]
     # taking scheduled transactions into account
     accounts['end_of_month_amount'] = accounts['amount']
-    for name in accounts.name:
-        for idx, operation in scheduled_transactions.iterrows():
-            i = 0
-            today = datetime.datetime.now()
-            last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
-            while operation.next_occurence \
-                + relativedelta(**{operation.every_type: i * operation.every_nb}) \
-                <= last_day_of_month:
-                i += 1
-            accounts.ix[accounts['name'] == operation.account, 'end_of_month_amount'] += \
-                operation.amount * i
+    for idx, operation in scheduled_transactions.iterrows():
+        i = 0
+        today = datetime.datetime.now()
+        last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
+        while operation.next_occurence \
+            + relativedelta(**{operation.every_type: i * operation.every_nb}) \
+            <= last_day_of_month:
+            i += 1
+        print i
+        accounts.ix[accounts['name'] == operation.account, 'end_of_month_amount'] += \
+            operation.amount * i
     return render_template('accounts.html', 
                            accounts=accounts.T.to_dict(),
                            **context)
