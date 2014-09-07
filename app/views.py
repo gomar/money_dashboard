@@ -276,10 +276,11 @@ def add_transaction(account_id, operationtype):
     else:
         previous_cheque_nb = models.Transaction.query.filter(models.Transaction.account == account.name)\
                                                  .filter(models.Transaction.cheque_number != None)\
+                                                 .order_by(models.Transaction.cheque_number)\
                                                  .order_by(desc(models.Transaction.date)).all()
 
         if previous_cheque_nb:
-            previous_cheque_nb = previous_cheque_nb[0].cheque_number
+            previous_cheque_nb = previous_cheque_nb[-1].cheque_number
         else:
             previous_cheque_nb = 0
 
@@ -374,6 +375,19 @@ def edit_transaction(transaction_id):
         form.operation_type.data = transaction.operation_type
         if transaction.operation_type == 'cheque':
             form.cheque_number.data = transaction.cheque_number
+        else:
+            previous_cheque_nb = models.Transaction.query.filter(models.Transaction.account == account.name)\
+                                                     .filter(models.Transaction.cheque_number != None)\
+                                                     .order_by(models.Transaction.cheque_number)\
+                                                     .order_by(desc(models.Transaction.date)).all()
+
+            if previous_cheque_nb:
+                previous_cheque_nb = previous_cheque_nb[-1].cheque_number
+            else:
+                previous_cheque_nb = 0
+
+            form.cheque_number.data = str(int(previous_cheque_nb) + 1)
+
     return render_template('add_transaction.html', 
                            label_operationtype= 'Edit transaction',
                            account_id=account.id,

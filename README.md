@@ -8,4 +8,3 @@
 - solde final mis en avant
 - mettre CB / cheque dans tableau de bord
 - credit / debit icone devant header
-- edit transaction: ajouter next cheque
