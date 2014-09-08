@@ -30,7 +30,7 @@
 			        <small><strong>current balance</strong></small>
 			      </div>
 			      <div class="col-sm-5 text-right">
-			          {{ account.amount }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
+			          {{ "%.2f"| format(account.amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
 			      </div>
 			    </div>
                 <!-- end of month balance -->
@@ -39,7 +39,7 @@
                     <small><strong>end of month balance</strong></small>
                   </div>
                   <div class="col-sm-5 text-right">
-                      {{ account.end_of_month_amount }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
+                      {{ "%.2f"| format(account.end_of_month_amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
                   </div>
                 </div>
 			</div>

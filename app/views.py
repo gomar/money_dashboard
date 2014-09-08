@@ -68,24 +68,7 @@ def account_name(url):
     account = models.Account.query.get(int(url[idx_account + 1]))
     return account.name
 
-app.jinja_env.filters['is_in'] = is_in
-app.jinja_env.filters['account_name'] = account_name
-
-global context
-context = {'now': datetime.datetime.now(),
-           'waiting_scheduled_transactions': update_waiting_scheduled_transactions()}
-
-
-@app.route('/')
-def intro():
-    for table in ['transaction', 'account', 'scheduled_transaction', 'transfer']:
-        pd.read_sql_table(table, db.engine).to_excel(os.path.join(app.config['DB_FOLDER'], 
-                                                                '%s.xls' % table))
-    return render_template('intro.html')
-
-
-@app.route('/accounts')
-def home():
+def get_balance():
     accounts = pd.read_sql_table('account', db.engine)
     transactions = pd.read_sql_table('transaction', db.engine, columns=['account', 'amount'])
     scheduled_transactions = pd.read_sql_table('scheduled_transaction', 
@@ -109,6 +92,27 @@ def home():
             i += 1
         accounts.ix[accounts['name'] == operation.account, 'end_of_month_amount'] += \
             operation.amount * i
+    return accounts
+
+app.jinja_env.filters['is_in'] = is_in
+app.jinja_env.filters['account_name'] = account_name
+
+global context
+context = {'now': datetime.datetime.now(),
+           'waiting_scheduled_transactions': update_waiting_scheduled_transactions()}
+
+
+@app.route('/')
+def intro():
+    for table in ['transaction', 'account', 'scheduled_transaction', 'transfer']:
+        pd.read_sql_table(table, db.engine).to_excel(os.path.join(app.config['DB_FOLDER'], 
+                                                                '%s.xls' % table))
+    return render_template('intro.html')
+
+
+@app.route('/accounts')
+def home():
+    accounts = get_balance()
     return render_template('accounts.html', 
                            accounts=accounts.T.to_dict(),
                            **context)
@@ -201,8 +205,14 @@ def transactions(account_id):
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
+    accounts = get_balance()
+    cur_balance = accounts.ix[accounts.name == account.name, 'amount'].values[0]
+    eom_balance = accounts.ix[accounts.name == account.name, 'end_of_month_amount'].values[0]
+
     return render_template('transactions.html', data=data, 
                            several_accounts=(models.Account.query.count() > 1),
+                           currency=account.currency,
+                           cur_balance=cur_balance, eom_balance=eom_balance,
                            account_id=account_id, **context)
 
 
