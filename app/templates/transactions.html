@@ -39,7 +39,7 @@
         <div class="col-md-6">
             <div class="page-header text-right">
                 <h4><small>current balance &nbsp;</small> {{ "%.2f"| format(cur_balance) }} <i class="fa fa-exchange fa-{{ currency }}"></i></h4>
-                <h4><small>end of month balance &nbsp;</small> {{ "%.2f"| format(eom_balance) }} <i class="fa fa-exchange fa-{{ currency }}"></i></h4>
+                {% if cur_balance != eom_balance %} <h4><small>end of month balance &nbsp;</small>{{ "%.2f"| format(eom_balance) }} <i class="fa fa-exchange fa-{{ currency }}"></i></h4> {% endif %}
             </div>
         </div>
     </div>

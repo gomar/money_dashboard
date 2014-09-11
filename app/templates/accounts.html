@@ -34,14 +34,16 @@
 			      </div>
 			    </div>
                 <!-- end of month balance -->
-                <div class="row">
-                  <div class="col-sm-7 text-right">
-                    <small><strong>end of month balance</strong></small>
-                  </div>
-                  <div class="col-sm-5 text-right">
-                      {{ "%.2f"| format(account.end_of_month_amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
-                  </div>
-                </div>
+                {% if account.amount != account.end_of_month_amount %}
+                    <div class="row">
+                      <div class="col-sm-7 text-right">
+                        <small><strong>end of month balance</strong></small>
+                      </div>
+                      <div class="col-sm-5 text-right">
+                          {{ "%.2f"| format(account.end_of_month_amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
+                      </div>
+                    </div>
+                {% endif %}
 			</div>
 		</div>
 	</div>
