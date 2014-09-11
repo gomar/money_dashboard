@@ -168,14 +168,14 @@ def transactions(account_id):
     data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
     data['action'] = ('<div class="btn-group">'
-                 '    <button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
+                 '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
                  '         <i class="fa fa-cog"></i>'
                  '    </button>'
                  '<ul class="dropdown-menu" role="menu">')
     data['action'] += np.where(data['note'] != '', 
                           ('<li>'
                            '<a href="/info_transaction/' + data['id'].astype(str) + 
-                           '" class="transactioninfo"><span><i class="fa fa-info fa-fw"></i> Information</span></a>'
+                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
                            '</li>'),
                           '')
     data['action'] += ('<li>'
@@ -195,8 +195,8 @@ def transactions(account_id):
 
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = np.nan
-    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-angle-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
-    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-angle-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
 
     # displaying the pandas data as an html table
     data = data[['action', 'date', 'description', 'category', 
