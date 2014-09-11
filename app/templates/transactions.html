@@ -18,20 +18,17 @@
                   </button>
                   <ul class="dropdown-menu" role="menu">
                     <li><a href="./add_transaction/debit">
-                        <span class="label label-danger">
-                            <i class="fa fa-minus fa-fw"></i>
-                        </span>&nbsp;&nbsp;debit
+                        <i class="fa fa-chevron-down fa-fw text-danger"></i>
+                        &nbsp;&nbsp;debit
                     </a></li>
                     <li><a href="./add_transaction/credit">
-                        <span class="label label-success">
-                            <i class="fa fa-plus fa-fw"></i>
-                        </span>&nbsp;&nbsp;credit
+                        <i class="fa fa-chevron-up fa-fw text-success"></i>
+                        &nbsp;&nbsp;credit
                     </a></li>
                     {% if several_accounts %}
                     <li><a href="./add_transaction/transfer">
-                        <span class="label label-primary">
-                            <i class="fa fa-exchange fa-fw"></i>
-                        </span>&nbsp;&nbsp;transfer
+                        <i class="fa fa-exchange fa-fw text-default"></i>
+                        &nbsp;&nbsp;transfer
                     </a></li>
                     {% endif %}
                   </ul>
@@ -87,9 +84,6 @@
                 type: 'type-info',
                 message: $('<div></div>').load(link)
             });
-        });
-        $(function () {
-            $("[rel='tooltip']").tooltip();
         });
     </script>
 {% endblock %}
