@@ -340,7 +340,7 @@ def add_transfer(account_id):
     return render_template('add_transfer.html',
                            account_id=account_id,
                            account_from=account.name,
-                           operationtype='Transfer',
+                           operationtype='transfer',
                            form=form,
                            currency=account.currency,
                            **context)

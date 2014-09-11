@@ -27,7 +27,13 @@
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>{{ label_operationtype }}</h3>
+		<h3>{{ label_operationtype }}&nbsp;
+			{% if 'debit' in label_operationtype %}
+				<i class='fa fa-chevron-down text-danger'></i>
+			{% elif 'credit' in label_operationtype %}
+				<i class='fa fa-chevron-up text-success'></i>
+			{% endif %}
+		</h3>
 	</div>
 	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
 		{{ form.csrf_token }}

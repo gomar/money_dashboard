@@ -6,5 +6,4 @@
 - add validations for each field in the form
 - macro to simplify error catching and printing in add transaction
 - mettre CB / cheque dans tableau de bord
-- credit / debit icone devant header
 - souligne dans actions de transactions
