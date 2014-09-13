@@ -605,8 +605,8 @@ def display_graph(account_id):
     total_income = np.sum(data[data['amount'] >= 0]['amount'])
     total_income_width = 80 * total_income / normalization
 
-    data.loc[data['amount'] >= 0, 'category'] = data[data['amount'] >= 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="left" title="%s"></i>' % (dict_category2icon[x], x))
-    data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="right" title="%s"></i>' % (dict_category2icon[x], x))
+    data.loc[data['amount'] >= 0, 'category'] = data[data['amount'] >= 0].index.map(lambda x: '<i class="fa %s fa-fw"></i>' % (dict_category2icon[x]))
+    data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(lambda x: '<i class="fa %s fa-fw"></i>' % (dict_category2icon[x]))
     data['percent'] = 80 * data['amount'] / normalization
 
     return render_template('graphs.html',
