@@ -591,13 +591,14 @@ def display_graph(account_id):
         form.end.data = end_day.strftime('%d/%m/%Y')
 
     data = compute(df, start_day, end_day)
-    csv_fname = os.path.join(app.config['DB_FOLDER'], '..', 'analysis_per_category.csv')
-    data.to_csv(csv_fname, sep=";")
+    csv_fname = os.path.join(app.config['DB_FOLDER'], '..', 'analysis_per_category.xls')
+    data.to_excel(csv_fname)
     csv_fname = os.path.relpath(csv_fname, start=app.config['BASEDIR'])
     data['str_category'] = data.index.copy()
     data['category'] = np.nan
 
-    normalization = max(data[data['amount'] < 0].sum()['amount'], data[data['amount'] >= 0].sum()['amount'])
+    normalization = max(abs(data[data['amount'] < 0].sum()['amount']), 
+                        abs(data[data['amount'] >= 0].sum()['amount']))
 
     total_expense = np.sum(data[data['amount'] < 0]['amount'])
     total_expense_width = 80 * total_expense / normalization
