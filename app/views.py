@@ -156,7 +156,7 @@ def delete_account(account_id):
         db.session.delete(transaction)
 
     # deleting all scheduled transactions
-    scheduled_transactions = models.ScheduledTransaction.query.filter(models.Transaction.account == account.name).all()
+    scheduled_transactions = models.ScheduledTransaction.query.filter(models.ScheduledTransaction.account == account.name).all()
     for s_transaction in scheduled_transactions:
         db.session.delete(s_transaction)
 
