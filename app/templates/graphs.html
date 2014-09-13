@@ -3,11 +3,16 @@
 <link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
 <style type="text/css">
 .top-buffer { margin-top:2px; }
+.form-group button {
+    background-color: #ecf0f1 !important;
+    color: #2C3E50 !important;
+    border: #dce4ec !important;
+}
 </style>
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>Graphical summary &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" class="btn btn-info btn-xs" role="button" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-cloud-download"></i></a>
+		<h3>Graphical summary
 		<div class="col-xs-5" style="float: right">
 			<form method="POST" action="" role="form">
 				{{ form.csrf_token }}
@@ -26,6 +31,7 @@
 		</div>
 		</h3>
 	</div>
+	<h4>Per category &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" class="btn btn-info btn-xs" role="button" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-cloud-download"></i></a></h4>
 	<div class="row">
 		{% for item in data %}
 			{% if item[4] < 0 %}
@@ -62,6 +68,36 @@
 			{% endif %}
 		{% endfor %}
 	</div>
+	<br>
+	<h4>Global &nbsp;&nbsp; 
+		<small>
+			{% if (total_income + total_expense) > 0 %}
+				(delta: <span class='text-success'> <i class='fa fa-chevron-up'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i></span>)
+			{% else %}
+				(delta: <span class='text-danger'> <i class='fa fa-chevron-down'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i></span>)
+			{% endif %}
+		</small>
+	</h4>
+	<div class="row">
+		<div class="col-xs-6 top-buffer text-right" style="padding: 6px;">
+			<h5>expense</h5>
+		</div>
+		<div class="col-xs-6 top-buffer text-left" style="padding: 6px;">
+			<h5>income</h5>
+		</div>
+		<div class="col-xs-6 top-buffer" style="padding: 3px;">
+			<div class="span6 pull-right text-right" style="width: {{ total_expense_width | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;color:white;">
+				<h5>{{total_expense | abs | round | int}} <i class="fa fa-{{ currency }}"></i>&nbsp;&nbsp;&nbsp;</h5>
+			</div>
+		</div>
+		<div class="col-xs-6 top-buffer" style="padding: 3px;">
+			<div class="span6 pull-left" style="width: {{ total_income_width | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;color:white;">
+				<h5>&nbsp;&nbsp;&nbsp;{{total_income | abs | round | int}} <i class="fa fa-{{ currency }}"></i></h5>
+			</div>
+		</div>
+	</div>
+	<br>
+	<br>
 {% endblock body %}
 {% block javascript %}
 <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>

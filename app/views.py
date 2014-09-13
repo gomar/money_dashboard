@@ -596,13 +596,23 @@ def display_graph(account_id):
     csv_fname = os.path.relpath(csv_fname, start=app.config['BASEDIR'])
     data['str_category'] = data.index.copy()
     data['category'] = np.nan
+
+    normalization = max(data[data['amount'] < 0].sum()['amount'], data[data['amount'] >= 0].sum()['amount'])
+
+    total_expense = np.sum(data[data['amount'] < 0]['amount'])
+    total_expense_width = 80 * total_expense / normalization
+    total_income = np.sum(data[data['amount'] >= 0]['amount'])
+    total_income_width = 80 * total_income / normalization
+
     data.loc[data['amount'] >= 0, 'category'] = data[data['amount'] >= 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="left" title="%s"></i>' % (dict_category2icon[x], x))
     data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="right" title="%s"></i>' % (dict_category2icon[x], x))
-    data['percent'] = 80 * data['amount'] / max(data[data['amount'] < 0].sum()['amount'], data[data['amount'] >= 0].sum()['amount'])
+    data['percent'] = 80 * data['amount'] / normalization
 
     return render_template('graphs.html',
                            account_id=account.id, csv_fname=csv_fname, 
                            form=form, data=list(data.itertuples()),
+                           total_expense=total_expense, total_expense_width=total_expense_width,
+                           total_income=total_income, total_income_width=total_income_width,
                            currency=account.currency,
                            **context)
 
