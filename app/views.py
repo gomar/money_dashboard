@@ -569,9 +569,37 @@ def edit_scheduled_transaction(transaction_id):
 @app.route('/account/<int:account_id>/graph/', methods=['GET', 'POST'])
 def display_graph(account_id):
     account = models.Account.query.get(account_id)
+    df = pd.read_sql_table('transaction', db.engine)
+    df = df[df['account'] == account.name]
+
+    def compute(df, start_day, end_day):
+        df = df[(df['date'] >= start_day) & (df['date'] <= end_day)]
+        df = df.groupby('category')[['amount']].sum()
+        return df
+
     form = forms.SelectDateRangeForm()
-    return render_template('graphs.html', 
-                           form=form,
+
+    if form.validate_on_submit():
+        start_day = datetime.datetime.strptime(form.start.data, '%d/%m/%Y')
+        end_day = datetime.datetime.strptime(form.end.data, '%d/%m/%Y')
+    else:
+        now = datetime.datetime.now()
+        start_day, end_day = calendar.monthrange(year=now.year, month=now.month)
+        start_day = datetime.date(now.year, now.month, 1)
+        end_day = datetime.date(now.year, now.month, end_day)
+        form.start.data = start_day.strftime('%d/%m/%Y')
+        form.end.data = end_day.strftime('%d/%m/%Y')
+
+    data = compute(df, start_day, end_day)
+    data['category'] = np.nan
+    data.loc[data['amount'] >= 0, 'category'] = data[data['amount'] >= 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="left" title="%s"></i>' % (dict_category2icon[x], x))
+    data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="right" title="%s"></i>' % (dict_category2icon[x], x))
+    data['percent'] = 100 * data['amount'] / max(data[data['amount'] < 0].sum()['amount'], data[data['amount'] >= 0].sum()['amount'])
+
+    return render_template('graphs.html',
+                           account_id=account.id, 
+                           form=form, data=list(data.itertuples()),
+                           currency=account.currency,
                            **context)
 
 

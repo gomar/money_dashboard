@@ -9,7 +9,7 @@
 {% endblock %}
 {% block body %}
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-xs-6">
             <div class="page-header">
                 <h3>Transactions &nbsp;&nbsp;
                 <div class="btn-group">
@@ -36,7 +36,7 @@
                 </h3>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-xs-6">
             <div class="page-header text-right">
                 <h4><small>current balance &nbsp;</small> {{ "%.2f"| format(cur_balance) }} <i class="fa fa-exchange fa-{{ currency }}"></i></h4>
                 {% if cur_balance != eom_balance %} <h4><small>end of month balance &nbsp;</small>{{ "%.2f"| format(eom_balance) }} <i class="fa fa-exchange fa-{{ currency }}"></i></h4> {% endif %}

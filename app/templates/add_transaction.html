@@ -39,8 +39,8 @@
 		{{ form.csrf_token }}
 		<!-- DATE -->
 	    <div class="form-group {% if form.date.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.date.label }}</label>
-	        <div class="col-md-4">
+	        <label class="control-label col-xs-2">{{ form.date.label }}</label>
+	        <div class="col-xs-4">
 		        {{ form.date(class_='form-control', id="my-datepicker") }}
 		        {% if form.date.errors %}
 		            {% for e in form.date.errors %}
@@ -49,16 +49,16 @@
 		        {% endif %}
 		    </div>
 		    {% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
-		    <label class="control-label col-md-2">ends</label>
-	        <div class="col-md-4">
+		    <label class="control-label col-xs-2">ends</label>
+	        <div class="col-xs-4">
 				{{ form.ends(class_='form-control', id="my-datepicker2", placeholder="Never", onfocus="$('#my-datepicker2').datepicker('setStartDate', document.getElementById('my-datepicker').value)")}}
 		    </div>
 		    {% endif %}
 	    </div>	    
 		{% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
 		<div class="form-group {% if form.every_nb.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.every_nb.label }}</label>
-	        <div class="col-md-2">
+	        <label class="control-label col-xs-2">{{ form.every_nb.label }}</label>
+	        <div class="col-xs-2">
 	        	<div class="input-group">
 		        	{{ form.every_nb(class_='form-control') }}
 			    </div>
@@ -68,7 +68,7 @@
 		            {% endfor %}
 		        {% endif %}
 		    </div>
-		    <div class="col-md-4">
+		    <div class="col-xs-4">
 	    	    {% for value, label, _ in form.every_type.iter_choices() %}
 		            <label class="radio-inline">
 		                <input type="radio" name="{{ form.every_type.id }}" id="{{ form.every_type.id }}" value="{{ value }}" {% if (form.every_type.default == value) or (form.every_type.data == value) %}checked{% endif %}>{{ label }}
@@ -79,8 +79,8 @@
 	    {% endif %}
 	    {% if (request.path | is_in('add_transaction/debit')) or (request.path | is_in('edit_transaction')) %}
 		<div class="form-group {% if form.operation_type.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.operation_type.label }}</label>
-		    <div class="form-inline col-md-10">
+	        <label class="control-label col-xs-2">{{ form.operation_type.label }}</label>
+		    <div class="form-inline col-xs-10">
 	    	    {% for value, label, _ in form.operation_type.iter_choices() %}
 	    	    	{% if label == 'cheque' %}
 		    	    	<label class="radio-inline">
@@ -95,16 +95,16 @@
 		    </div>
 	    </div>
 	    <div class="form-group {% if form.cheque_number.errors %}has-error{% endif %}" id="cheque_number_option" {% if form.operation_type.data != 'cheque' %}style="display: none"{% endif %}>
-	    	<label class="control-label col-md-2">cheque number</label>
-		    <div class="col-md-4">
+	    	<label class="control-label col-xs-2">cheque number</label>
+		    <div class="col-xs-4">
 		    	{{ form.cheque_number(class_='form-control') }}
 		    </div>
 	    </div>
 	    {% endif %}
 	    <!-- AMOUNT -->
 	   	<div class="form-group {% if form.amount.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.amount.label }}</label>
-	        <div class="col-md-4">
+	        <label class="control-label col-xs-2">{{ form.amount.label }}</label>
+	        <div class="col-xs-4">
 	        	<div class="input-group">
 		        	{{ form.amount(class_='form-control') }}
 		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
@@ -118,8 +118,8 @@
 	    </div>
 	    <!-- DESCRIPTION -->
 	   	<div class="form-group {% if form.description.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.description.label }}</label>
-	        <div class="col-md-10">
+	        <label class="control-label col-xs-2">{{ form.description.label }}</label>
+	        <div class="col-xs-10">
 	        	{{ form.description(class_='form-control') }}
 		        {% if form.description.errors %}
 		            {% for e in form.description.errors %}
@@ -130,13 +130,13 @@
 	    </div>
 	    <!-- CATEGORY -->
 	   	<div class="form-group">
-	        <label class="control-label col-md-2">{{ form.category.label }}</label>
-	        	{{ form.category(class_='selectpicker col-md-10') }}
+	        <label class="control-label col-xs-2">{{ form.category.label }}</label>
+	        	{{ form.category(class_='selectpicker col-xs-10') }}
 	    </div>
 	   	<!-- NOTE -->
 	   	<div class="form-group {% if form.note.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.note.label }}</label>
-	        <div class="col-md-10">
+	        <label class="control-label col-xs-2">{{ form.note.label }}</label>
+	        <div class="col-xs-10">
 	        	{{ form.note(class_='form-control') }}
 		        {% if form.note.errors %}
 		            {% for e in form.note.errors %}

@@ -25,7 +25,7 @@
 		</h3>
 	</div>
 	{% for transaction in scheduled_transactions %}
-	<div class="col-sm-6">
+	<div class="col-xs-6">
 		<div class="panel panel-{% if transaction.next_occurence <= now %}primary{% else %}default{% endif %}">
 			<div class="panel-heading">
 			    <h3 class="panel-title">{% if transaction.next_occurence <= now %} <i class="fa fa-exclamation-triangle"></i>{% endif %} {{ transaction.description }}
@@ -45,28 +45,28 @@
 			<div class="panel-body">
 			    <!-- next occurence -->
 			    <div class="row">
-			      <div class="col-sm-4 text-right">
+			      <div class="col-xs-4 text-right">
 			        <small><strong>next occurence</strong></small>
 			      </div>
-			      <div class="col-sm-8">
+			      <div class="col-xs-8">
 			          {{ transaction.next_occurence.strftime('%d/%m/%Y') }}
 			      </div>
 			    </div>
 			    <!-- amount -->
 				<div class="row">
-			      <div class="col-sm-4 text-right">
+			      <div class="col-xs-4 text-right">
 			        <small><strong>amount</strong></small>
 			      </div>
-			      <div class="col-sm-8">
+			      <div class="col-xs-8">
 			      	  {{ "%.2f"| format(transaction.amount) }} &nbsp;<i class="fa fa-{{ currency }}"></i>
 			      </div>
 				</div>
 				<!-- every -->
 				<div class="row">
-			      <div class="col-sm-4 text-right">
+			      <div class="col-xs-4 text-right">
 			        <small><strong>every</strong></small>
 			      </div>
-			      <div class="col-sm-8">
+			      <div class="col-xs-8">
 			      	  {{ transaction.every_nb }} {{ transaction.every_type }}
 			      </div>
 				</div>

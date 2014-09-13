@@ -11,7 +11,7 @@
         </h3>
     </div>
     {% for account in accounts.values() %}
-	<div class="col-sm-6">
+	<div class="col-xs-6">
 		<div class="panel panel-default">
 			<div class="panel-heading">
 			    <h3 class="panel-title">{{ account.name }}
@@ -26,20 +26,20 @@
 			<div class="panel-body">
 			    <!-- current balance -->
 			    <div class="row">
-			      <div class="col-sm-7 text-right">
+			      <div class="col-xs-7 text-right">
 			        <small><strong>current balance</strong></small>
 			      </div>
-			      <div class="col-sm-5 text-right">
+			      <div class="col-xs-5 text-right">
 			          {{ "%.2f"| format(account.amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
 			      </div>
 			    </div>
                 <!-- end of month balance -->
                 {% if account.amount != account.end_of_month_amount %}
                     <div class="row">
-                      <div class="col-sm-7 text-right">
+                      <div class="col-xs-7 text-right">
                         <small><strong>end of month balance</strong></small>
                       </div>
-                      <div class="col-sm-5 text-right">
+                      <div class="col-xs-5 text-right">
                           {{ "%.2f"| format(account.end_of_month_amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
                       </div>
                     </div>

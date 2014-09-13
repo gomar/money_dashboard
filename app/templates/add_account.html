@@ -32,8 +32,8 @@
 		{{ form.csrf_token }}
 		<!-- NAME -->
 	   	<div class="form-group {% if form.name.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.name.label }}</label>
-	        <div class="col-md-10">
+	        <label class="control-label col-xs-2">{{ form.name.label }}</label>
+	        <div class="col-xs-10">
 	        	{{ form.name(class_='form-control') }}
 		        {% if form.name.errors %}
 		            {% for e in form.name.errors %}
@@ -44,8 +44,8 @@
 	    </div>
 	    <!-- INITIAL BALANCE -->
 	   	<div class="form-group {% if form.initial_balance.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.initial_balance.label }}</label>
-	        <div class="col-md-2">
+	        <label class="control-label col-xs-2">{{ form.initial_balance.label }}</label>
+	        <div class="col-xs-2">
 	        	{{ form.initial_balance(class_='form-control') }}
 		        {% if form.initial_balance.errors %}
 		            {% for e in form.initial_balance.errors %}
@@ -53,7 +53,7 @@
 		            {% endfor %}
 		        {% endif %}
 		    </div>
-		    <div class="col-md-8">
+		    <div class="col-xs-8">
 		    {% for value, label, _ in form.currency.iter_choices() %}
 	            <label class="radio-inline">
 	                <input type="radio" name="{{ form.currency.id }}" id="{{ form.currency.id }}" value="{{ value }}">{{ label | safe}}

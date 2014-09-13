@@ -2,48 +2,56 @@
 {% block css %}
 <link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
 <style type="text/css">
-.chart div {
-  background-color: #18BC9C;
-  text-align: left;
-  padding: 7px;
-  margin: 1px;
-}
-.chart a {
-  color: white;
-}
+.top-buffer { margin-top:2px; }
 </style>
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>Graphical summary</h3>
-	</div>
-	<div class="row">
-		<div class="col-md-6">
+		<h3>Graphical summary
+		<div class="col-xs-5" style="float: right">
 			<form method="POST" action="" role="form">
 				{{ form.csrf_token }}
 				<div class="form-group">
 					<div class="input-daterange input-group input-group-sm" id="datepicker">
-						<span class="input-group-addon">Date range</span>
-					  	{{ form.start(class_='input-sm form-control') }}
+						<span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
+					  	{{ form.start(class_='form-control') }}
 					  	<span class="input-group-addon">to</span>
-					  	{{ form.end(class_='input-sm form-control') }}
+					  	{{ form.end(class_='form-control') }}
 					  	<span class="input-group-btn">
-					  		<button class="btn btn-info" type="submit">Analyse</button>
-					  	</span>
+				        	<button class="btn btn-default btn-sm" type="submit"><i class="fa fa-share"></i></button>
+					    </span>
 					</div>
 				</div>
 			</form>
 		</div>
+		</h3>
 	</div>
-	<div class="row container">
-		<div class="col-sm-6 chart">
-	    	<div style="width: 40%;"><a href="test"><i class="fa fa-edit"></i></a></div>
-	    	<div style="width: 80%;"><a href="test">80</a></div>
-	    	<div style="width: 15%;"><a href="test">15</a></div>
-	    	<div style="width: 16%;"><a href="test">16</a></div>
-	    	<div style="width: 23%;"><a href="test">23</a></div>
-	    	<div style="width: 42%;"><a href="test">42</a></div>
-	    </div>
+	<div class="row">
+		{% for item in data %}
+			{% if item[3] < 0 %}
+				<a href="">
+					<div class="col-xs-6 top-buffer">
+						<div class="span6 pull-right" style="width: {{ item[3] | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;"><h5>&nbsp;</h5></div>
+					</div>
+				</a>
+				<div class="col-xs-6 top-buffer">
+					<div class="span6 pull-left"><h5>{{ item[2] | safe }} &nbsp; {{ item[1] | abs | round | int}} &nbsp; <i class="fa fa-{{ currency }}"></i></h5></div>
+				</div>
+				<br>
+			{% elif item[3] > 0 %}
+				<div class="col-xs-6 top-buffer">
+					<div class="span6 pull-right"><h5>{{ item[1] | abs | round | int}} &nbsp; <i class="fa fa-{{ currency }}"></i> &nbsp; {{ item[2] | safe }}</h5></div>
+				</div>
+				<a href="">
+					<div class="col-xs-6 top-buffer">
+						<div class="span6 pull-left" style="width: {{ item[3] | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;">
+							<h5>&nbsp;</h5>
+						</div>
+					</div>
+				</a>
+				<br>
+			{% endif %}
+		{% endfor %}
 	</div>
 {% endblock body %}
 {% block javascript %}

@@ -35,8 +35,8 @@
 		{{ form.csrf_token }}
 		<!-- DATE -->
 	    <div class="form-group {% if form.date.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.date.label }}</label>
-	        <div class="col-md-4">
+	        <label class="control-label col-xs-2">{{ form.date.label }}</label>
+	        <div class="col-xs-4">
 		        {{ form.date(class_='form-control', id="my-datepicker") }}
 		        {% if form.date.errors %}
 		            {% for e in form.date.errors %}
@@ -47,20 +47,20 @@
 	    </div>
 	    <!-- FROM ACCOUNT -->
 	   	<div class="form-group">
-		    <label class="col-md-2 control-label">from</label>
-		    <div class="col-md-4">
+		    <label class="col-xs-2 control-label">from</label>
+		    <div class="col-xs-4">
 		        <p class="form-control-static"> {{ account_from }} </p>
 		    </div>
 		</div>
 		<!-- TO ACCOUNT -->
 	   	<div class="form-group">
-	        <label class="control-label col-md-2">to</label>
-	        	{{ form.account_to(class_='selectpicker col-md-10') }}
+	        <label class="control-label col-xs-2">to</label>
+	        	{{ form.account_to(class_='selectpicker col-xs-10') }}
 	    </div>
 	    <!-- AMOUNT -->
 	   	<div class="form-group {% if form.amount.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.amount.label }}</label>
-	        <div class="col-md-4">
+	        <label class="control-label col-xs-2">{{ form.amount.label }}</label>
+	        <div class="col-xs-4">
 	        	<div class="input-group">
 		        	{{ form.amount(class_='form-control') }}
 		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
@@ -74,8 +74,8 @@
 	    </div>
 	    <!-- DESCRIPTION -->
 	   	<div class="form-group {% if form.description.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.description.label }}</label>
-	        <div class="col-md-10">
+	        <label class="control-label col-xs-2">{{ form.description.label }}</label>
+	        <div class="col-xs-10">
 	        	{{ form.description(class_='form-control') }}
 		        {% if form.description.errors %}
 		            {% for e in form.description.errors %}
@@ -86,8 +86,8 @@
 	    </div>
 	   	<!-- NOTE -->
 	   	<div class="form-group {% if form.note.errors %}has-error{% endif %}">
-	        <label class="control-label col-md-2">{{ form.note.label }}</label>
-	        <div class="col-md-10">
+	        <label class="control-label col-xs-2">{{ form.note.label }}</label>
+	        <div class="col-xs-10">
 	        	{{ form.note(class_='form-control') }}
 		        {% if form.note.errors %}
 		            {% for e in form.note.errors %}
