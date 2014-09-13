@@ -7,7 +7,7 @@
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>Graphical summary
+		<h3>Graphical summary &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" class="btn btn-info btn-xs" role="button" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-cloud-download"></i></a>
 		<div class="col-xs-5" style="float: right">
 			<form method="POST" action="" role="form">
 				{{ form.csrf_token }}
@@ -18,7 +18,7 @@
 					  	<span class="input-group-addon">to</span>
 					  	{{ form.end(class_='form-control') }}
 					  	<span class="input-group-btn">
-				        	<button class="btn btn-default btn-sm" type="submit"><i class="fa fa-share"></i></button>
+				        	<button class="btn btn-info btn-sm" type="submit"><i class="fa fa-share"></i></button>
 					    </span>
 					</div>
 				</div>

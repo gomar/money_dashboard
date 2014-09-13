@@ -591,13 +591,16 @@ def display_graph(account_id):
         form.end.data = end_day.strftime('%d/%m/%Y')
 
     data = compute(df, start_day, end_day)
+    csv_fname = os.path.join(app.config['DB_FOLDER'], '..', 'analysis_per_category.csv')
+    data.to_csv(csv_fname, sep=";")
+    csv_fname = os.path.relpath(csv_fname, start=app.config['BASEDIR'])
     data['category'] = np.nan
     data.loc[data['amount'] >= 0, 'category'] = data[data['amount'] >= 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="left" title="%s"></i>' % (dict_category2icon[x], x))
     data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="right" title="%s"></i>' % (dict_category2icon[x], x))
     data['percent'] = 100 * data['amount'] / max(data[data['amount'] < 0].sum()['amount'], data[data['amount'] >= 0].sum()['amount'])
 
     return render_template('graphs.html',
-                           account_id=account.id, 
+                           account_id=account.id, csv_fname=csv_fname, 
                            form=form, data=list(data.itertuples()),
                            currency=account.currency,
                            **context)
