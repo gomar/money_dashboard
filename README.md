@@ -5,3 +5,4 @@
 - macro to simplify error catching and printing in add transaction
 - mettre CB / cheque dans tableau de bord
 - souligne dans actions de transactions
+- auto sauvegarde des donnees: par jour, par mois et par semaine
