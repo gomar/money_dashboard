@@ -94,6 +94,14 @@ def get_balance():
             operation.amount * i
     return accounts
 
+def category_id(category):
+    categories = list_category + ['Misc. Expense', 'Misc. Income']
+    return categories.index(category)
+
+def category_name(category_id):
+    categories = list_category + ['Misc. Expense', 'Misc. Income']
+    return categories[category_id]
+
 app.jinja_env.filters['is_in'] = is_in
 app.jinja_env.filters['account_name'] = account_name
 
@@ -609,6 +617,10 @@ def display_graph(account_id):
     data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(lambda x: '<i class="fa %s fa-fw"></i>' % (dict_category2icon[x]))
     data['percent'] = 80 * data['amount'] / normalization
 
+    
+    data['category_link'] = data['str_category'].map(lambda x: category_id(x)).astype(str) \
+                            + '/' + start_day.strftime('%d%m%Y') + end_day.strftime('%d%m%Y')
+
     return render_template('graphs.html',
                            account_id=account.id, csv_fname=csv_fname, 
                            form=form, data=list(data.itertuples()),
@@ -617,6 +629,65 @@ def display_graph(account_id):
                            currency=account.currency,
                            **context)
 
+
+@app.route('/account/<int:account_id>/graph/<category_id>/<date_range>')
+def transactions_category(account_id, category_id, date_range):
+    account = models.Account.query.get(account_id)
+
+    start_date = datetime.datetime.strptime(date_range[:8], '%d%m%Y')
+    end_date = datetime.datetime.strptime(date_range[8:], '%d%m%Y')
+
+    data = pd.read_sql_table('transaction', db.engine)
+    data = data[(data['account'] == account.name) & 
+                (data['category'] == category_name(int(category_id))) &
+                (data['date'] >= start_date) &
+                (data['date'] <= end_date)]
+
+    pd.set_option('display.max_colwidth', 1000)
+
+    data['action'] = ('<div class="btn-group">'
+                 '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
+                 '         <i class="fa fa-cog"></i>'
+                 '    </button>'
+                 '<ul class="dropdown-menu" role="menu">')
+    data['action'] += np.where(data['note'] != '', 
+                          ('<li>'
+                           '<a href="/info_transaction/' + data['id'].astype(str) + 
+                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                           '</li>'),
+                          '')
+    data['action'] += ('<li>'
+                  '<a href="/edit_transaction/' + data['id'].astype(str) + 
+                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+    data['action'] += ('<li>'
+                  '<a href="/delete_transaction/' + data['id'].astype(str) + 
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
+    data['action'] += '</ul></div>'
+
+    # sorting based on descending date
+    total_amount = np.sum(data['amount'])
+    if total_amount >= 0:
+        data = data.sort(['amount'], ascending=False)
+    else:
+        data = data.sort(['amount'], ascending=True)
+
+    # adding the total amount
+    currency = '(<i class="fa fa-%s"></i>)' % account.currency
+
+    # replacing amount by in and out for easier reading
+    data['amount %s' % currency] = np.nan
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+
+    # displaying the pandas data as an html table
+    data = data[['action', 'date', 'description',
+                 'amount %s' % currency]]
+
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
+                        index=False, escape=False, na_rep='')
+    return render_template('transactions.html', data=data, 
+                           currency=account.currency, category=category_name(int(category_id)), 
+                           account_id=account_id, **context)
 
 @app.errorhandler(404)
 def page_not_found(e):
