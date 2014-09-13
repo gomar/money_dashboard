@@ -18,7 +18,7 @@
 					  	<span class="input-group-addon">to</span>
 					  	{{ form.end(class_='form-control') }}
 					  	<span class="input-group-btn">
-				        	<button class="btn btn-info btn-sm" type="submit"><i class="fa fa-share"></i></button>
+				        	<button class="btn btn-default btn-sm" type="submit"><i class="fa fa-share"></i></button>
 					    </span>
 					</div>
 				</div>
@@ -28,24 +28,33 @@
 	</div>
 	<div class="row">
 		{% for item in data %}
-			{% if item[3] < 0 %}
+			{% if item[4] < 0 %}
 				<a href="">
-					<div class="col-xs-6 top-buffer">
-						<div class="span6 pull-right" style="width: {{ item[3] | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;"><h5>&nbsp;</h5></div>
+					<div class="col-xs-6 top-buffer" style="padding: 0;">
+						<div class="span6 pull-right" style="width: {{ item[4] | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;"><h5>&nbsp;</h5></div>
+						<div class="span6 pull-right" style="color:#2C3E50;">
+							<h6>{{ item[1] | abs | round | int}} <i class="fa fa-{{ currency }}"></i>&nbsp; &nbsp;</h6>
+						</div>
 					</div>
 				</a>
 				<div class="col-xs-6 top-buffer">
-					<div class="span6 pull-left"><h5>{{ item[2] | safe }} &nbsp; {{ item[1] | abs | round | int}} &nbsp; <i class="fa fa-{{ currency }}"></i></h5></div>
+					<div class="span6 pull-left"><h5>{{item[3] | safe }} <small>{{item[2]}}</small></h5></div>
 				</div>
 				<br>
-			{% elif item[3] > 0 %}
+			{% endif %}
+		{% endfor %}
+		{% for item in data %}
+			{% if item[4] > 0 %}
 				<div class="col-xs-6 top-buffer">
-					<div class="span6 pull-right"><h5>{{ item[1] | abs | round | int}} &nbsp; <i class="fa fa-{{ currency }}"></i> &nbsp; {{ item[2] | safe }}</h5></div>
+					<div class="span6 pull-right"><h5><small>{{item[2]}}</small> {{item[3] | safe }} </h5></div>
 				</div>
 				<a href="">
-					<div class="col-xs-6 top-buffer">
-						<div class="span6 pull-left" style="width: {{ item[3] | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;">
+					<div class="col-xs-6 top-buffer" style="padding: 0;">
+						<div class="span6 pull-left" style="width: {{ item[4] | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;">
 							<h5>&nbsp;</h5>
+						</div>
+						<div class="span6 pull-left" style="color:#2C3E50;">
+							<h6>&nbsp; &nbsp; {{ item[1] | abs | round | int}} <i class="fa fa-{{ currency }}"></i></h6>
 						</div>
 					</div>
 				</a>
