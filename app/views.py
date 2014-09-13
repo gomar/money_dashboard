@@ -566,6 +566,15 @@ def edit_scheduled_transaction(transaction_id):
                            **context)
 
 
+@app.route('/account/<int:account_id>/graph/', methods=['GET', 'POST'])
+def display_graph(account_id):
+    account = models.Account.query.get(account_id)
+    form = forms.SelectDateRangeForm()
+    return render_template('graphs.html', 
+                           form=form,
+                           **context)
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html', **context), 404

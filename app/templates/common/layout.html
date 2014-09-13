@@ -35,9 +35,9 @@
                       {% endif %}
                   </a>
                 </li>
-                <li {% if request.path | is_in('temp') %}class="active"{% endif %}>
-                  <a href="/account/{{ account_id }}/temp" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="TEMP !!">
-                      <i class="fa fa-cogs"></i>
+                <li {% if request.path | is_in('graph') %}class="active"{% endif %}>
+                  <a href="/account/{{ account_id }}/graph" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="graphical summary">
+                      <i class="fa fa-bar-chart-o"></i>
                   </a>
                 </li>
               </ul>

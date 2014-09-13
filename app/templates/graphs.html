@@ -1,10 +1,21 @@
 {% extends 'common/layout.html' %}
 {% block css %}
 <link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+<style type="text/css">
+.chart div {
+  background-color: #18BC9C;
+  text-align: left;
+  padding: 7px;
+  margin: 1px;
+}
+.chart a {
+  color: white;
+}
+</style>
 {% endblock css %}
 {% block body %}
 	<div class="page-header">
-		<h3>Dashboard</h3>
+		<h3>Graphical summary</h3>
 	</div>
 	<div class="row">
 		<div class="col-md-6">
@@ -25,20 +36,14 @@
 		</div>
 	</div>
 	<div class="row container">
-	  <div class="col-md-4">
-	  	<div id="donut-expenses">
-		</div>
-		<div class='text-center'>
-			<h4>Expenses</h4>
-		</div>
-	  </div>
-	  <div class="col-md-4">
-	  	<div id="donut-incomes">
-		</div>
-		<div class='text-center'>
-			<h4>Incomes</h4>
-		</div>
-	  </div>
+		<div class="col-sm-6 chart">
+	    	<div style="width: 40%;"><a href="test"><i class="fa fa-edit"></i></a></div>
+	    	<div style="width: 80%;"><a href="test">80</a></div>
+	    	<div style="width: 15%;"><a href="test">15</a></div>
+	    	<div style="width: 16%;"><a href="test">16</a></div>
+	    	<div style="width: 23%;"><a href="test">23</a></div>
+	    	<div style="width: 42%;"><a href="test">42</a></div>
+	    </div>
 	</div>
 {% endblock body %}
 {% block javascript %}
