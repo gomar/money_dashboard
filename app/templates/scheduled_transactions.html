@@ -52,6 +52,48 @@
                                 } 
                             }}]
             });
+        });        
+        $(document).on("click", ".confirmcreate", function(e) {
+            var link = $(this).attr("href"); // "get" the intended link in a var
+            e.preventDefault();
+            new BootstrapDialog.show({
+                type: 'type-info',
+                title: 'Creat Scheduled Transaction',
+                message: 'Are you sure that you want to create this scheduled transaction ?',
+                buttons: [{ label: 'Cancel',
+                            cssClass: 'btn-default',
+                            action: function(dialogRef) {
+                                dialogRef.close()
+                            }}, 
+                          { label: 'Yes',
+                            cssClass: 'btn-info',
+                            action: function(result) {
+                                if (result) {
+                                    document.location.href = link;
+                                } 
+                            }}]
+            });
+        });        
+        $(document).on("click", ".confirmskip", function(e) {
+            var link = $(this).attr("href"); // "get" the intended link in a var
+            e.preventDefault();
+            new BootstrapDialog.show({
+                type: 'type-danger',
+                title: 'Skip Scheduled Transaction',
+                message: 'Are you sure that you want to skip this scheduled transaction ?',
+                buttons: [{ label: 'Cancel',
+                            cssClass: 'btn-default',
+                            action: function(dialogRef) {
+                                dialogRef.close()
+                            }}, 
+                          { label: 'Yes',
+                            cssClass: 'btn-danger',
+                            action: function(result) {
+                                if (result) {
+                                    document.location.href = link;
+                                } 
+                            }}]
+            });
         });
         $(document).on("click", ".transactioninfo", function(e) {
             var link = $(this).attr("href"); // "get" the intended link in a var

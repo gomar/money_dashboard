@@ -175,28 +175,31 @@ def transactions(account_id):
     data = pd.read_sql_table('transaction', db.engine)
     data = data[data['account'] == account.name]
 
-    pd.set_option('display.max_colwidth', 1000)
+    pd.set_option('display.max_colwidth', 2000)
 
-    data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
+    data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
-    data['action'] = ('<div class="btn-group">'
-                 '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
-                 '         <i class="fa fa-cog"></i>'
-                 '    </button>'
-                 '<ul class="dropdown-menu" role="menu">')
-    data['action'] += np.where(data['note'] != '', 
-                          ('<li>'
-                           '<a href="/info_transaction/' + data['id'].astype(str) + 
-                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
-                           '</li>'),
-                          '')
-    data['action'] += ('<li>'
-                  '<a href="/edit_transaction/%s/' % account_id + data['id'].astype(str) + 
-                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
-    data['action'] += ('<li>'
-                  '<a href="/delete_transaction/%s/' % account_id + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
-    data['action'] += '</ul></div>'
+    data['action'] = ''
+    data['action'] += ('<a href="/edit_transaction/account/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs" style="color: #2C3E50;">'
+                       '    <span class="fa-stack">'
+                       '         <i class="fa fa-circle fa-stack-2x"></i>'
+                       '         <i class="fa fa-edit fa-stack-1x fa-inverse"></i>'
+                       '    </span>'
+                       '</a>')
+    data['action'] += ('<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmdelete" style="color: #E74C3C;">'
+                       '    <span class="fa-stack">'
+                       '         <i class="fa fa-circle fa-stack-2x"></i>'
+                       '         <i class="fa fa-trash-o fa-stack-1x fa-inverse"></i>'
+                       '    </span>'
+                       '</a>')
+
+    data['action'] += np.where(data['note'] == '', '',
+                              ('<a href="/info_transaction/' + data['id'].astype(str) + '" class="btn btn-xs transactioninfo" style="color: #3498DB;">'
+                       '    <span class="fa-stack">'
+                       '         <i class="fa fa-circle fa-stack-2x"></i>'
+                       '         <i class="fa fa-info fa-stack-1x fa-inverse"></i>'
+                       '    </span>'
+                               '</a>'))
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
@@ -230,7 +233,7 @@ def transactions(account_id):
                            account_id=account_id, **context)
 
 
-@app.route('/info_transaction/<int:account_id>/<int:transaction_id>')
+@app.route('/info_transaction/<int:transaction_id>')
 def info_transaction(transaction_id):
     note = models.Transaction.query.get(transaction_id).note
     return render_template('info_transaction.html', 
@@ -359,7 +362,7 @@ def add_transfer(account_id):
                            **context)
 
 
-@app.route('/edit_transaction/<int:account_id>/<int:transaction_id>', methods=['GET', 'POST'])
+@app.route('/edit_transaction/account/<int:account_id>/<int:transaction_id>', methods=['GET', 'POST'])
 def edit_transaction(account_id, transaction_id):
     form = forms.AddTransactionForm()
 
@@ -430,7 +433,7 @@ def scheduled_transactions(account_id):
 
     data = data.rename(columns={'next_occurence': 'next occurence'})
 
-    pd.set_option('display.max_colwidth', 1000)
+    pd.set_option('display.max_colwidth', 2000)
 
     # category icons
     data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
@@ -438,10 +441,11 @@ def scheduled_transactions(account_id):
     # every is mix of two columns
     data['every'] = data['every_nb'].astype(str) + ' ' + data['every_type'].astype(str)
 
+
     data['action'] = ('<div class="btn-group">'
-                 '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
-                 '         <i class="fa fa-cog"></i>'
-                 '    </button>'
+                 '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
+                       '         <i class="fa fa-cog"></i>'
+                       '    </a>'
                  '<ul class="dropdown-menu" role="menu">')
     data['action'] += np.where(data['note'] != '', 
                           ('<li>'
@@ -450,10 +454,10 @@ def scheduled_transactions(account_id):
                            '</li>'),
                           '')
     data['action'] += ('<li>'
-                  '<a href="/edit_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + 
+                  '<a href="/edit_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) + 
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
-                  '<a href="/delete_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + 
+                  '<a href="/delete_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) + 
                   '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
     data['action'] += '</ul></div>'
 
@@ -468,15 +472,19 @@ def scheduled_transactions(account_id):
     data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
     data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
 
-    data[' '] = ('<div class="btn-group btn-group-xs">'
-                 '    <a href="/create_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-primary" role="button">create</a>'
-                 '    <a href="/skip_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-default" role="button">skip</a>'
-                 '</div>')
+    data['create_btn'] = np.where(data['next occurence'] <= datetime.datetime.now(), '#E74C3C', '#95a5a6')
+
+    data['action'] += ('<a href="/create_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmcreate" style="color:' + data['create_btn'] + ';" rel="tooltip" data-toggle="tooltip" data-placement="top" title="create">'
+                       '         <i class="fa fa-play-circle"></i>'
+                       '</a>')    
+    data['action'] += ('<a href="/skip_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmskip" style="color:#95a5a6;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="skip">'
+                       '         <i class="fa fa-step-forward"></i>'
+                       '</a>')
 
     # displaying the pandas data as an html table
     data = data[['action', 'next occurence', 'description', 
                  'category', 'amount %s' % currency, 
-                 'every', ' ']]
+                 'every']]
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
@@ -487,7 +495,7 @@ def scheduled_transactions(account_id):
                            account_id=account_id, **context)
 
 
-@app.route('/delete_scheduled_transaction/<int:account_id>/<int:transaction_id>')
+@app.route('/delete_scheduled_transaction/account/<int:account_id>/<int:transaction_id>')
 def delete_scheduled_transaction(account_id, transaction_id):
     transaction = models.ScheduledTransaction.query.get(transaction_id)
     db.session.delete(transaction)
@@ -586,7 +594,7 @@ def info_scheduled_transaction(transaction_id):
                            **context)
 
 
-@app.route('/edit_scheduled_transaction/<int:account_id>/<int:transaction_id>', methods=['GET', 'POST'])
+@app.route('/edit_scheduled_transaction/account/<int:account_id>/<int:transaction_id>', methods=['GET', 'POST'])
 def edit_scheduled_transaction(account_id, transaction_id):
     form = forms.AddScheduledTransactionForm()
     form.date.label = 'next occurence'
