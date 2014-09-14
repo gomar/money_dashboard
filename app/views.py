@@ -33,7 +33,8 @@ dict_category2icon = {'Vehicle': 'fa-car',
 'Salary': 'fa-plus',
 'Tax': 'fa-gavel',
 'Misc. Income': 'fa-question-circle',
-'Misc. Expense': 'fa-question-circle'}
+'Misc. Expense': 'fa-question-circle', 
+'Transfer': 'fa-exchange'}
 
 list_currency = [('euro', u'Euro (<i class="fa fa-euro"></i>)'), 
                  ('gbp', u'British pound (<i class="fa fa-gbp"></i>)')]
@@ -190,10 +191,10 @@ def transactions(account_id):
                            '</li>'),
                           '')
     data['action'] += ('<li>'
-                  '<a href="/edit_transaction/' + data['id'].astype(str) + 
+                  '<a href="/edit_transaction/%s/' % account_id + data['id'].astype(str) + 
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
-                  '<a href="/delete_transaction/' + data['id'].astype(str) + 
+                  '<a href="/delete_transaction/%s/' % account_id + data['id'].astype(str) + 
                   '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
     data['action'] += '</ul></div>'
 
@@ -229,7 +230,7 @@ def transactions(account_id):
                            account_id=account_id, **context)
 
 
-@app.route('/info_transaction/<int:transaction_id>')
+@app.route('/info_transaction/<int:account_id>/<int:transaction_id>')
 def info_transaction(transaction_id):
     note = models.Transaction.query.get(transaction_id).note
     return render_template('info_transaction.html', 
@@ -237,15 +238,13 @@ def info_transaction(transaction_id):
                            **context)
 
 
-@app.route('/delete_transaction/<int:transaction_id>')
-def delete_transaction(transaction_id):
+@app.route('/delete_transaction/<int:account_id>/<int:transaction_id>')
+def delete_transaction(account_id, transaction_id):
     transaction = models.Transaction.query.get(transaction_id)
     if len(transaction.transfer_to):
         db.session.delete(transaction.transfer_to[0])
     db.session.delete(transaction)
     db.session.commit()
-    account_id = models.Account.query\
-            .filter(models.Account.name == transaction.account).all()[0].id
     return redirect('/account/%d/transactions' % account_id)
 
 
@@ -360,8 +359,8 @@ def add_transfer(account_id):
                            **context)
 
 
-@app.route('/edit_transaction/<int:transaction_id>', methods=['GET', 'POST'])
-def edit_transaction(transaction_id):
+@app.route('/edit_transaction/<int:account_id>/<int:transaction_id>', methods=['GET', 'POST'])
+def edit_transaction(account_id, transaction_id):
     form = forms.AddTransactionForm()
 
     # setting categories choice
@@ -376,7 +375,7 @@ def edit_transaction(transaction_id):
     if transaction.operation_type == 'transfer':
         abort(404)
 
-    account = models.Account.query.filter(models.Account.name == transaction.account).all()[0]
+    account = models.Account.query.get(account_id)
 
     if form.validate_on_submit():
         transaction.date = form.date.data
@@ -451,10 +450,10 @@ def scheduled_transactions(account_id):
                            '</li>'),
                           '')
     data['action'] += ('<li>'
-                  '<a href="/edit_scheduled_transaction/' + data['id'].astype(str) + 
+                  '<a href="/edit_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + 
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
-                  '<a href="/delete_scheduled_transaction/' + data['id'].astype(str) + 
+                  '<a href="/delete_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + 
                   '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
     data['action'] += '</ul></div>'
 
@@ -469,10 +468,15 @@ def scheduled_transactions(account_id):
     data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
     data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
 
+    data[' '] = ('<div class="btn-group btn-group-xs">'
+                 '    <a href="/create_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-primary" role="button">create</a>'
+                 '    <a href="/skip_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-default" role="button">skip</a>'
+                 '</div>')
+
     # displaying the pandas data as an html table
     data = data[['action', 'next occurence', 'description', 
                  'category', 'amount %s' % currency, 
-                 'every']]
+                 'every', ' ']]
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
@@ -483,13 +487,12 @@ def scheduled_transactions(account_id):
                            account_id=account_id, **context)
 
 
-@app.route('/delete_scheduled_transaction/<int:transaction_id>')
-def delete_scheduled_transaction(transaction_id):
+@app.route('/delete_scheduled_transaction/<int:account_id>/<int:transaction_id>')
+def delete_scheduled_transaction(account_id, transaction_id):
     transaction = models.ScheduledTransaction.query.get(transaction_id)
     db.session.delete(transaction)
     db.session.commit()
-    account_id = models.Account.query\
-            .filter(models.Account.name == transaction.account).all()[0].id
+    account = models.Account.query.get(account_id)
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
@@ -538,8 +541,8 @@ def add_scheduled_transaction(account_id, operationtype):
                            **context)
 
 
-@app.route('/create_scheduled_transaction/<int:transaction_id>')
-def create_scheduled_transaction(transaction_id):
+@app.route('/create_scheduled_transaction/<int:account_id>/<int:transaction_id>')
+def create_scheduled_transaction(account_id, transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     u = models.Transaction(date=s_transaction.next_occurence,
                            account=s_transaction.account,
@@ -557,21 +560,20 @@ def create_scheduled_transaction(transaction_id):
         relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
     db.session.commit()
 
-    account_id = models.Account.query\
-            .filter(models.Account.name == s_transaction.account).all()[0].id
+    account = models.Account.query.get(account_id)
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
 
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
-@app.route('/skip_scheduled_transaction/<int:transaction_id>')
-def skip_scheduled_transaction(transaction_id):
+@app.route('/skip_scheduled_transaction/<int:account_id>/<int:transaction_id>')
+def skip_scheduled_transaction(account_id, transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
     s_transaction.next_occurence = s_transaction.next_occurence + \
         relativedelta(**{s_transaction.every_type: s_transaction.every_nb})
     db.session.commit()
-    account_id = models.Account.query\
-            .filter(models.Account.name == s_transaction.account).all()[0].id
+    account = models.Account.query.get(account_id)
+
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
@@ -584,8 +586,8 @@ def info_scheduled_transaction(transaction_id):
                            **context)
 
 
-@app.route('/edit_scheduled_transaction/<int:transaction_id>', methods=['GET', 'POST'])
-def edit_scheduled_transaction(transaction_id):
+@app.route('/edit_scheduled_transaction/<int:account_id>/<int:transaction_id>', methods=['GET', 'POST'])
+def edit_scheduled_transaction(account_id, transaction_id):
     form = forms.AddScheduledTransactionForm()
     form.date.label = 'next occurence'
     categories = list_category + ['Misc. Expense', 'Misc. Income']
@@ -593,8 +595,7 @@ def edit_scheduled_transaction(transaction_id):
     form.category.choices = zip(categories, categories)
     # getting the transaction element
     transaction = models.ScheduledTransaction.query.get(transaction_id)
-    account = models.Account.query\
-        .filter(models.Account.name == transaction.account).all()[0]
+    account = models.Account.query.get(account_id)
 
     if form.is_submitted():
         # update the rssfeed column
