@@ -423,6 +423,8 @@ def scheduled_transactions(account_id):
 
     pd.to_datetime(data['next_occurence'])
 
+    data = data.rename(columns={'next_occurence': 'next occurence'})
+
     pd.set_option('display.max_colwidth', 1000)
 
     # category icons
@@ -451,7 +453,7 @@ def scheduled_transactions(account_id):
     data['action'] += '</ul></div>'
 
     # sorting based on next occurence
-    data = data.sort('next_occurence')
+    data = data.sort('next occurence')
 
     # adding the total amount
     currency = '(<i class="fa fa-%s"></i>)' % account.currency
@@ -462,7 +464,7 @@ def scheduled_transactions(account_id):
     data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
 
     # displaying the pandas data as an html table
-    data = data[['action', 'next_occurence', 'description', 
+    data = data[['action', 'next occurence', 'description', 
                  'category', 'amount %s' % currency, 
                  'every']]
 
