@@ -179,27 +179,24 @@ def transactions(account_id):
 
     data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
-    data['action'] = ''
-    data['action'] += ('<a href="/edit_transaction/account/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs" style="color: #2C3E50;">'
-                       '    <span class="fa-stack">'
-                       '         <i class="fa fa-circle fa-stack-2x"></i>'
-                       '         <i class="fa fa-edit fa-stack-1x fa-inverse"></i>'
-                       '    </span>'
-                       '</a>')
-    data['action'] += ('<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmdelete" style="color: #E74C3C;">'
-                       '    <span class="fa-stack">'
-                       '         <i class="fa fa-circle fa-stack-2x"></i>'
-                       '         <i class="fa fa-trash-o fa-stack-1x fa-inverse"></i>'
-                       '    </span>'
-                       '</a>')
-
-    data['action'] += np.where(data['note'] == '', '',
-                              ('<a href="/info_transaction/' + data['id'].astype(str) + '" class="btn btn-xs transactioninfo" style="color: #3498DB;">'
-                       '    <span class="fa-stack">'
-                       '         <i class="fa fa-circle fa-stack-2x"></i>'
-                       '         <i class="fa fa-info fa-stack-1x fa-inverse"></i>'
-                       '    </span>'
-                               '</a>'))
+    data['action'] = ('<div class="btn-group">'
+                 '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
+                       '         <i class="fa fa-cog"></i>'
+                       '    </a>'
+                 '<ul class="dropdown-menu" role="menu">')
+    data['action'] += np.where(data['note'] != '', 
+                          ('<li>'
+                           '<a href="/info_transaction/' + data['id'].astype(str) + 
+                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                           '</li>'),
+                          '')
+    data['action'] += ('<li>'
+                  '<a href="/edit_transaction/account/%s/' % account_id + data['id'].astype(str) + 
+                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+    data['action'] += ('<li>'
+                  '<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) + 
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
+    data['action'] += '</ul></div>'
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
