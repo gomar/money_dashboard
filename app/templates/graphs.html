@@ -39,9 +39,9 @@
 	<h4>Global &nbsp;&nbsp; 
 		<small>
 			{% if (total_income + total_expense) > 0 %}
-				<i class='fa fa-chevron-up'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i>
+				<span class="text-success"><i class='fa fa-chevron-up'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i></span>
 			{% else %}
-				<i class='fa fa-chevron-down'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i>
+				<span class="text-danger"><i class='fa fa-chevron-down'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i></span>
 			{% endif %}
 		</small>
 	</h4>
@@ -64,7 +64,7 @@
 		</div>
 	</div>
 	<br>
-	<h4>Per category &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" style="color: #95a5a6;" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-download"></i></a></h4>
+	<h4>Per category &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-download"></i></a></h4>
 	<div class="row">
 		{% for item in data %}
 			{% if item[4] < 0 %}
@@ -112,7 +112,8 @@ $('.input-daterange').datepicker({
     forceParse: false,
     autoclose: true,
     todayHighlight: true,
-    format: "dd/mm/yyyy"
+    format: "dd/mm/yyyy",
+    startDate: "{{ min_date }}"
 });
 </script>
 {% endblock javascript %}

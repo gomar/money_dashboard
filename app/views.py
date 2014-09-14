@@ -580,6 +580,8 @@ def display_graph(account_id):
     df = pd.read_sql_table('transaction', db.engine)
     df = df[df['account'] == account.name]
 
+    min_date = df['date'].min()
+
     def compute(df, start_day, end_day):
         df = df[(df['date'] >= start_day) & (df['date'] <= end_day)]
         df = df.groupby('category')[['amount']].sum()
@@ -623,7 +625,7 @@ def display_graph(account_id):
 
     return render_template('graphs.html',
                            account_id=account.id, csv_fname=csv_fname, 
-                           form=form, data=list(data.itertuples()),
+                           form=form, data=list(data.itertuples()), min_date=min_date.strftime('%d/%m/%Y'),
                            total_expense=total_expense, total_expense_width=total_expense_width,
                            total_income=total_income, total_income_width=total_income_width,
                            currency=account.currency,
