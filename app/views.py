@@ -41,9 +41,12 @@ list_currency = [('euro', u'Euro (<i class="fa fa-euro"></i>)'),
 list_operation_type = ['credit card', 'online payment', 'cheque', 'other']
 
 
-def update_waiting_scheduled_transactions():
-    if os.path.exists(app.config['DB_FNAME']):
+def update_waiting_scheduled_transactions(account_name=None):
+    if (os.path.exists(app.config['DB_FNAME'])) and (account_name is not None):
+        print account_name
         return models.ScheduledTransaction.query\
+                    .filter(models.ScheduledTransaction.account
+                            == account_name)\
                     .filter(models.ScheduledTransaction.next_occurence
                             <= datetime.datetime.now())\
                     .filter(or_(models.ScheduledTransaction.ends
@@ -217,6 +220,8 @@ def transactions(account_id):
     cur_balance = accounts.ix[accounts.name == account.name, 'amount'].values[0]
     eom_balance = accounts.ix[accounts.name == account.name, 'end_of_month_amount'].values[0]
 
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+
     return render_template('transactions.html', data=data, 
                            several_accounts=(models.Account.query.count() > 1),
                            currency=account.currency,
@@ -345,6 +350,7 @@ def add_transfer(account_id):
         db.session.add(b)
         db.session.commit()
         return redirect('/account/%d/transactions' % account_id)
+
     return render_template('add_transfer.html',
                            account_id=account_id,
                            account_from=account.name,
@@ -471,6 +477,8 @@ def scheduled_transactions(account_id):
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
                         index=False, escape=False, na_rep='')
 
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+
     return render_template('scheduled_transactions.html', data=data, 
                            account_id=account_id, **context)
 
@@ -482,7 +490,7 @@ def delete_scheduled_transaction(transaction_id):
     db.session.commit()
     account_id = models.Account.query\
             .filter(models.Account.name == transaction.account).all()[0].id
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
@@ -520,13 +528,13 @@ def add_scheduled_transaction(account_id, operationtype):
         # adding to database
         db.session.add(u)
         db.session.commit()
-        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
         return redirect('/account/%d/scheduled_transactions' % account_id)
     return render_template('add_transaction.html', 
                            form=form, 
                            account_id=account_id,
                            currency=account.currency,
-                           label_operationtype= 'Add scheduled transaction',
+                           label_operationtype= 'Add scheduled %s' % operationtype,
                            **context)
 
 
@@ -551,7 +559,7 @@ def create_scheduled_transaction(transaction_id):
 
     account_id = models.Account.query\
             .filter(models.Account.name == s_transaction.account).all()[0].id
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
 
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
@@ -564,7 +572,7 @@ def skip_scheduled_transaction(transaction_id):
     db.session.commit()
     account_id = models.Account.query\
             .filter(models.Account.name == s_transaction.account).all()[0].id
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
@@ -599,7 +607,7 @@ def edit_scheduled_transaction(transaction_id):
         transaction.every_type = form.every_type.data
         transaction.ends = form.ends.data
         db.session.commit()
-        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
+        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
         return redirect('/account/%d/scheduled_transactions' % account.id)
     else:
         form.date.data = transaction.next_occurence
