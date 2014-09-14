@@ -44,7 +44,6 @@ list_operation_type = ['credit card', 'online payment', 'cheque', 'other']
 
 def update_waiting_scheduled_transactions(account_name=None):
     if (os.path.exists(app.config['DB_FNAME'])) and (account_name is not None):
-        print account_name
         return models.ScheduledTransaction.query\
                     .filter(models.ScheduledTransaction.account
                             == account_name)\
@@ -423,6 +422,21 @@ def scheduled_transactions(account_id):
     data = pd.read_sql_table('scheduled_transaction', db.engine)
     data = data[data['account'] == account.name]
 
+    monthly_income = 0
+    monthly_expense = 0
+    for idx, operation in data.iterrows():
+        i = 0
+        first_day = datetime.datetime.now().replace(day=1)
+        last_day = first_day + relativedelta(months=+1)
+        while first_day \
+            + relativedelta(**{operation.every_type: i * operation.every_nb}) \
+            < last_day:
+            i += 1
+        if operation.amount >= 0:
+            monthly_income += operation.amount * i
+        else:
+            monthly_expense += operation.amount * i
+
     # selecting only scheduled transactions that are still active
     data = data[(data['ends'] > datetime.datetime.now()) | pd.isnull(data['ends'])]
 
@@ -488,7 +502,9 @@ def scheduled_transactions(account_id):
 
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
 
-    return render_template('scheduled_transactions.html', data=data, 
+    return render_template('scheduled_transactions.html', data=data,
+                           monthly_expense=monthly_expense, monthly_income=monthly_income,
+                           currency=account.currency,
                            account_id=account_id, **context)
 
 
