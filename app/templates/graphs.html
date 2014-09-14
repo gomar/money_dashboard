@@ -8,6 +8,11 @@
     color: #2C3E50 !important;
     border: #dce4ec !important;
 }
+.span6 h5 {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 </style>
 {% endblock css %}
 {% block body %}
@@ -59,7 +64,7 @@
 		</div>
 	</div>
 	<br>
-	<h4>Per category &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" class="btn btn-default btn-xs" role="button" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-cloud-download"></i></a></h4>
+	<h4>Per category &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" style="color: #95a5a6;" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-download"></i></a></h4>
 	<div class="row">
 		{% for item in data %}
 			{% if item[4] < 0 %}
