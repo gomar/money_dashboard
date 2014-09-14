@@ -53,12 +53,13 @@
 			<h5>income</h5>
 		</div>
 		<div class="col-xs-6 top-buffer" style="padding: 3px;">
-			<div class="span6 pull-right text-right" style="width: {{ total_expense_width | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;color:white;">
+
+			<div class="span6 pull-right text-right" {% if total_expense | abs > 0 %}style="width: {{ total_expense_width | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;color:white;"{% endif %}>
 				<h5>{{total_expense | abs | round | int}} <i class="fa fa-{{ currency }}"></i>&nbsp;&nbsp;&nbsp;</h5>
 			</div>
 		</div>
 		<div class="col-xs-6 top-buffer" style="padding: 3px;">
-			<div class="span6 pull-left" style="width: {{ total_income_width | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;color:white;">
+			<div class="span6 pull-left" {% if total_income | abs > 0 %}style="width: {{ total_income_width | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;color:white;"{% endif %}>
 				<h5>&nbsp;&nbsp;&nbsp;{{total_income | abs | round | int}} <i class="fa fa-{{ currency }}"></i></h5>
 			</div>
 		</div>
