@@ -415,20 +415,62 @@ def edit_transaction(transaction_id):
 @app.route('/account/<int:account_id>/scheduled_transactions')
 def scheduled_transactions(account_id):
     account = models.Account.query.get(account_id)
-    df = pd.read_sql_table('scheduled_transaction', db.engine)
-    df = df[df['account'] == account.name]
-    df = df[(df['ends'] > datetime.datetime.now()) | pd.isnull(df['ends'])]
-    pd.to_datetime(df['next_occurence'])
-    df = df.sort('next_occurence')
-    df = pd.DataFrame(df.values, columns=df.columns)
-    df_dict = df.T.to_dict()
-    scheduled_transactions = [df_dict[i] for i in range(len(df_dict))]
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions()
-    return render_template('scheduled_transactions.html', 
-                           scheduled_transactions=scheduled_transactions,
-                           account_id=account_id,
-                           currency=account.currency,
-                           **context)
+    data = pd.read_sql_table('scheduled_transaction', db.engine)
+    data = data[data['account'] == account.name]
+
+    # selecting only scheduled transactions that are still active
+    data = data[(data['ends'] > datetime.datetime.now()) | pd.isnull(data['ends'])]
+
+    pd.to_datetime(data['next_occurence'])
+
+    pd.set_option('display.max_colwidth', 1000)
+
+    # category icons
+    data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
+    
+    # every is mix of two columns
+    data['every'] = data['every_nb'].astype(str) + ' ' + data['every_type'].astype(str)
+
+    data['action'] = ('<div class="btn-group">'
+                 '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
+                 '         <i class="fa fa-cog"></i>'
+                 '    </button>'
+                 '<ul class="dropdown-menu" role="menu">')
+    data['action'] += np.where(data['note'] != '', 
+                          ('<li>'
+                           '<a href="/info_scheduled_transaction/' + data['id'].astype(str) + 
+                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                           '</li>'),
+                          '')
+    data['action'] += ('<li>'
+                  '<a href="/edit_scheduled_transaction/' + data['id'].astype(str) + 
+                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+    data['action'] += ('<li>'
+                  '<a href="/delete_scheduled_transaction/' + data['id'].astype(str) + 
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
+    data['action'] += '</ul></div>'
+
+    # sorting based on next occurence
+    data = data.sort('next_occurence')
+
+    # adding the total amount
+    currency = '(<i class="fa fa-%s"></i>)' % account.currency
+
+    # replacing amount by in and out for easier reading
+    data['amount %s' % currency] = np.nan
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+
+    # displaying the pandas data as an html table
+    data = data[['action', 'next_occurence', 'description', 
+                 'category', 'amount %s' % currency, 
+                 'every']]
+
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
+                        index=False, escape=False, na_rep='')
+
+    return render_template('scheduled_transactions.html', data=data, 
+                           account_id=account_id, **context)
 
 
 @app.route('/delete_scheduled_transaction/<int:transaction_id>')
@@ -580,7 +622,10 @@ def display_graph(account_id):
     df = pd.read_sql_table('transaction', db.engine)
     df = df[df['account'] == account.name]
 
-    min_date = df['date'].min()
+    try:
+        min_date = df['date'].min().strftime('%d/%m/%Y')
+    except AttributeError:
+        min_date = 0
 
     def compute(df, start_day, end_day):
         df = df[(df['date'] >= start_day) & (df['date'] <= end_day)]
@@ -625,7 +670,7 @@ def display_graph(account_id):
 
     return render_template('graphs.html',
                            account_id=account.id, csv_fname=csv_fname, 
-                           form=form, data=list(data.itertuples()), min_date=min_date.strftime('%d/%m/%Y'),
+                           form=form, data=list(data.itertuples()), min_date=min_date,
                            total_expense=total_expense, total_expense_width=total_expense_width,
                            total_income=total_income, total_income_width=total_income_width,
                            currency=account.currency,
