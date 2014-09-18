@@ -237,7 +237,7 @@ def info_transaction(transaction_id):
                            **context)
 
 
-@app.route('/delete_transaction/<int:account_id>/<int:transaction_id>')
+@app.route('/delete_transaction/account/<int:account_id>/<int:transaction_id>')
 def delete_transaction(account_id, transaction_id):
     transaction = models.Transaction.query.get(transaction_id)
     if len(transaction.transfer_to):
