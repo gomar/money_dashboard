@@ -1,9 +1,30 @@
 {% extends 'common/layout.html' %}
 {% block css %}
     <link href="{{ url_for('static', filename='css/bootstrap-dialog.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}" rel="stylesheet">
     <style type="text/css">
     .table {
         font-size: 14px 
+    }
+    .btn-custom { 
+        background-color: #ffffff;
+        background-image: none;
+        border: 1px solid #dce4ec;
+        border-radius: 3px;
+        border-width: 2px;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+    .btn-custom:hover {
+        color: inherit;
+    }
+    .btn-custom:focus,
+    .btn-custom:active:focus,
+    .btn-custom.active:focus {
+        color: inherit;
+        border-color: #2c3e50;
+        outline: 0;
     }
     </style>
 {% endblock %}
@@ -19,16 +40,16 @@
                         <i class="fa fa-plus"></i>
                       </button>
                       <ul class="dropdown-menu" role="menu">
-                        <li><a href="./add_transaction/debit">
+                        <li><a data-toggle="modal" href="/account/{{account_id}}/add_transaction/debit.html" data-target="#modal1">
                             <i class="fa fa-chevron-down fa-fw text-danger"></i>
                             &nbsp;&nbsp;debit
                         </a></li>
-                        <li><a href="./add_transaction/credit">
+                        <li><a data-toggle="modal" href="/account/{{account_id}}/add_transaction/credit.html" data-target="#modal2">
                             <i class="fa fa-chevron-up fa-fw text-success"></i>
                             &nbsp;&nbsp;credit
                         </a></li>
                         {% if several_accounts %}
-                        <li><a href="./add_transaction/transfer">
+                        <li><a data-toggle="modal" href="/account/{{account_id}}/add_transaction/transfer.html" data-target="#modal3">
                             <i class="fa fa-exchange fa-fw text-default"></i>
                             &nbsp;&nbsp;transfer
                         </a></li>
@@ -50,10 +71,15 @@
             </div>
         {% endif %}
     </div>
+    <div class="modal fade" id="modal1" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true"></div>
+    <div class="modal fade" id="modal2" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true"></div>
+    <div class="modal fade" id="modal3" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true"></div>
     {{ data | safe }}
 {% endblock %}
 {% block javascript %}
 	<script src="{{ url_for('static', filename='js/bootstrap-dialog.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
     <script type='text/javascript'>
         $(document).on("click", ".confirmdelete", function(e) {
             var link = $(this).attr("href"); // "get" the intended link in a var
@@ -85,6 +111,24 @@
                 message: $('<div></div>').load(link)
             });
         });
+    $('#my-datepicker').datepicker({
+        keyboardNavigation: false,
+        forceParse: false,
+        autoclose: true,
+        todayHighlight: true,
+        format: "dd/mm/yyyy"
+    });
+    $('#my-datepicker2').datepicker({
+        keyboardNavigation: false,
+        forceParse: false,
+        autoclose: true,
+        todayHighlight: true,
+        format: "dd/mm/yyyy"
+    });
+    $('.selectpicker').selectpicker({
+        style: 'btn-custom'  
+    });
+    $('.modal').modal({ show: false})
     </script>
 {% endblock %}
 

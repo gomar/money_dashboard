@@ -247,7 +247,7 @@ def delete_transaction(account_id, transaction_id):
     return redirect('/account/%d/transactions' % account_id)
 
 
-@app.route('/account/<int:account_id>/add_transaction/<operationtype>', methods=['GET', 'POST'])
+@app.route('/account/<int:account_id>/add_transaction/<operationtype>.html', methods=['GET', 'POST'])
 def add_transaction(account_id, operationtype):
     if operationtype == 'transfer':
         return redirect('/account/%d/add_transfer' % account_id)

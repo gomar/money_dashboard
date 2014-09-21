@@ -1,176 +1,132 @@
-{% extends 'common/layout.html' %}
 {% import 'common/form_macros.html' as macros %}
-{% block css %}
-<link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
-<link href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}" rel="stylesheet">
-<style type="text/css">
-	.btn-custom { 
-		background-color: #ffffff;
-		background-image: none;
-		border: 1px solid #dce4ec;
-		border-radius: 3px;
-		border-width: 2px;
-		-webkit-box-shadow: none;
-		box-shadow: none;
-  	}
-  	.btn-custom:hover {
-  		color: inherit;
-  	}
-  	.btn-custom:focus,
-	.btn-custom:active:focus,
-	.btn-custom.active:focus {
-  		color: inherit;
-  border-color: #2c3e50;
-  outline: 0;
-  	}
-</style>
-{% endblock css %}
-{% block body %}
-	<div class="page-header">
-		<h3>{{ label_operationtype }}&nbsp;
-			{% if 'debit' in label_operationtype %}
-				<i class='fa fa-chevron-down text-danger'></i>
-			{% elif 'credit' in label_operationtype %}
-				<i class='fa fa-chevron-up text-success'></i>
-			{% endif %}
-		</h3>
-	</div>
-	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
-		{{ form.csrf_token }}
-		<!-- DATE -->
-	    <div class="form-group {% if form.date.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.date.label }}</label>
-	        <div class="col-xs-4">
-		        {{ form.date(class_='form-control', id="my-datepicker") }}
-		        {% if form.date.errors %}
-		            {% for e in form.date.errors %}
-		                <p class="help-block">{{ e }}</p>
-		            {% endfor %}
-		        {% endif %}
-		    </div>
-		    {% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
-		    <label class="control-label col-xs-2">ends</label>
-	        <div class="col-xs-4">
-				{{ form.ends(class_='form-control', id="my-datepicker2", placeholder="Never", onfocus="$('#my-datepicker2').datepicker('setStartDate', document.getElementById('my-datepicker').value)")}}
-		    </div>
-		    {% endif %}
-	    </div>	    
-		{% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
-		<div class="form-group {% if form.every_nb.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.every_nb.label }}</label>
-	        <div class="col-xs-2">
-	        	<div class="input-group">
-		        	{{ form.every_nb(class_='form-control') }}
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h3>{{ label_operationtype }}&nbsp;
+				{% if 'debit' in label_operationtype %}
+					<i class='fa fa-chevron-down text-danger'></i>
+				{% elif 'credit' in label_operationtype %}
+					<i class='fa fa-chevron-up text-success'></i>
+				{% endif %}
+			</h3>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
+				{{ form.csrf_token }}
+				<!-- DATE -->
+			    <div class="form-group {% if form.date.errors %}has-error{% endif %}">
+			        <label class="control-label col-xs-2">{{ form.date.label }}</label>
+			        <div class="col-xs-4">
+				        {{ form.date(class_='form-control', id="my-datepicker") }}
+				        {% if form.date.errors %}
+				            {% for e in form.date.errors %}
+				                <p class="help-block">{{ e }}</p>
+				            {% endfor %}
+				        {% endif %}
+				    </div>
+				    {% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
+				    <label class="control-label col-xs-2">ends</label>
+			        <div class="col-xs-4">
+						{{ form.ends(class_='form-control', id="my-datepicker2", placeholder="Never", onfocus="$('#my-datepicker2').datepicker('setStartDate', document.getElementById('my-datepicker').value)")}}
+				    </div>
+				    {% endif %}
+			    </div>	    
+				{% if (request.path | is_in('add_scheduled_transaction')) or (request.path | is_in('edit_scheduled_transaction')) %}
+				<div class="form-group {% if form.every_nb.errors %}has-error{% endif %}">
+			        <label class="control-label col-xs-2">{{ form.every_nb.label }}</label>
+			        <div class="col-xs-2">
+			        	<div class="input-group">
+				        	{{ form.every_nb(class_='form-control') }}
+					    </div>
+				        {% if form.every_nb.errors %}
+				            {% for e in form.every_nb.errors %}
+				                <p class="help-block">{{ e }}</p>
+				            {% endfor %}
+				        {% endif %}
+				    </div>
+				    <div class="col-xs-4">
+			    	    {% for value, label, _ in form.every_type.iter_choices() %}
+				            <label class="radio-inline">
+				                <input type="radio" name="{{ form.every_type.id }}" id="{{ form.every_type.id }}" value="{{ value }}" {% if (form.every_type.default == value) or (form.every_type.data == value) %}checked{% endif %}>{{ label }}
+				            </label>
+					    {% endfor %}
+				    </div>
 			    </div>
-		        {% if form.every_nb.errors %}
-		            {% for e in form.every_nb.errors %}
-		                <p class="help-block">{{ e }}</p>
-		            {% endfor %}
-		        {% endif %}
-		    </div>
-		    <div class="col-xs-4">
-	    	    {% for value, label, _ in form.every_type.iter_choices() %}
-		            <label class="radio-inline">
-		                <input type="radio" name="{{ form.every_type.id }}" id="{{ form.every_type.id }}" value="{{ value }}" {% if (form.every_type.default == value) or (form.every_type.data == value) %}checked{% endif %}>{{ label }}
-		            </label>
-			    {% endfor %}
-		    </div>
-	    </div>
-	    {% endif %}
-	    {% if (request.path | is_in('add_transaction/debit')) or (request.path | is_in('edit_transaction')) %}
-		<div class="form-group {% if form.operation_type.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.operation_type.label }}</label>
-		    <div class="form-inline col-xs-10">
-	    	    {% for value, label, _ in form.operation_type.iter_choices() %}
-	    	    	{% if label == 'cheque' %}
-		    	    	<label class="radio-inline">
-			                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').show();}" {% if (form.operation_type.default == value) or (form.operation_type.data == value) %}checked{% endif %}>{{ label }}
-			            </label>
-		            {% else %}
-		            <label class="radio-inline">
-		                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').hide();}" {% if (form.operation_type.default == value) or (form.operation_type.data == value) %}checked{% endif %}>{{ label }}
-		            </label>
-		            {% endif %}
-			    {% endfor %}
-		    </div>
-	    </div>
-	    <div class="form-group {% if form.cheque_number.errors %}has-error{% endif %}" id="cheque_number_option" {% if form.operation_type.data != 'cheque' %}style="display: none"{% endif %}>
-	    	<label class="control-label col-xs-2">cheque number</label>
-		    <div class="col-xs-4">
-		    	{{ form.cheque_number(class_='form-control') }}
-		    </div>
-	    </div>
-	    {% endif %}
-	    <!-- AMOUNT -->
-	   	<div class="form-group {% if form.amount.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.amount.label }}</label>
-	        <div class="col-xs-4">
-	        	<div class="input-group">
-		        	{{ form.amount(class_='form-control') }}
-		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
+			    {% endif %}
+			    {% if (request.path | is_in('add_transaction/debit')) or (request.path | is_in('edit_transaction')) %}
+				<div class="form-group {% if form.operation_type.errors %}has-error{% endif %}">
+			        <label class="control-label col-xs-2">{{ form.operation_type.label }}</label>
+				    <div class="form-inline col-xs-10">
+			    	    {% for value, label, _ in form.operation_type.iter_choices() %}
+			    	    	{% if label == 'cheque' %}
+				    	    	<label class="radio-inline">
+					                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').show();}" {% if (form.operation_type.default == value) or (form.operation_type.data == value) %}checked{% endif %}>{{ label }}
+					            </label>
+				            {% else %}
+				            <label class="radio-inline">
+				                <input type="radio" name="{{ form.operation_type.id }}" id="{{ form.operation_type.id }}" value="{{ value }}" onclick="if( this.checked ) {$('#cheque_number_option').hide();}" {% if (form.operation_type.default == value) or (form.operation_type.data == value) %}checked{% endif %}>{{ label }}
+				            </label>
+				            {% endif %}
+					    {% endfor %}
+				    </div>
 			    </div>
-		        {% if form.amount.errors %}
-		            {% for e in form.amount.errors %}
-		                <p class="help-block">{{ e }}</p>
-		            {% endfor %}
-		        {% endif %}
-		    </div>
-	    </div>
-	    <!-- DESCRIPTION -->
-	   	<div class="form-group {% if form.description.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.description.label }}</label>
-	        <div class="col-xs-10">
-	        	{{ form.description(class_='form-control') }}
-		        {% if form.description.errors %}
-		            {% for e in form.description.errors %}
-		                <p class="help-block">{{ e }}</p>
-		            {% endfor %}
-		        {% endif %}
-		    </div>
-	    </div>
-	    <!-- CATEGORY -->
-	   	<div class="form-group">
-	        <label class="control-label col-xs-2">{{ form.category.label }}</label>
-	        	{{ form.category(class_='selectpicker col-xs-10') }}
-	    </div>
-	   	<!-- NOTE -->
-	   	<div class="form-group {% if form.note.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.note.label }}</label>
-	        <div class="col-xs-10">
-	        	{{ form.note(class_='form-control') }}
-		        {% if form.note.errors %}
-		            {% for e in form.note.errors %}
-		                <p class="help-block">{{ e }}</p>
-		            {% endfor %}
-		        {% endif %}
-		    </div>
-	    </div>
-	    <div class="btn-group pull-right">
-	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
+			    <div class="form-group {% if form.cheque_number.errors %}has-error{% endif %}" id="cheque_number_option" {% if form.operation_type.data != 'cheque' %}style="display: none"{% endif %}>
+			    	<label class="control-label col-xs-2">cheque number</label>
+				    <div class="col-xs-4">
+				    	{{ form.cheque_number(class_='form-control') }}
+				    </div>
+			    </div>
+			    {% endif %}
+			    <!-- AMOUNT -->
+			   	<div class="form-group {% if form.amount.errors %}has-error{% endif %}">
+			        <label class="control-label col-xs-2">{{ form.amount.label }}</label>
+			        <div class="col-xs-4">
+			        	<div class="input-group">
+				        	{{ form.amount(class_='form-control') }}
+				        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
+					    </div>
+				        {% if form.amount.errors %}
+				            {% for e in form.amount.errors %}
+				                <p class="help-block">{{ e }}</p>
+				            {% endfor %}
+				        {% endif %}
+				    </div>
+			    </div>
+			    <!-- DESCRIPTION -->
+			   	<div class="form-group {% if form.description.errors %}has-error{% endif %}">
+			        <label class="control-label col-xs-2">{{ form.description.label }}</label>
+			        <div class="col-xs-10">
+			        	{{ form.description(class_='form-control') }}
+				        {% if form.description.errors %}
+				            {% for e in form.description.errors %}
+				                <p class="help-block">{{ e }}</p>
+				            {% endfor %}
+				        {% endif %}
+				    </div>
+			    </div>
+			    <!-- CATEGORY -->
+			   	<div class="form-group">
+			        <label class="control-label col-xs-2">{{ form.category.label }}</label>
+			        	{{ form.category(class_='selectpicker col-xs-10') }}
+			    </div>
+			   	<!-- NOTE -->
+			   	<div class="form-group {% if form.note.errors %}has-error{% endif %}">
+			        <label class="control-label col-xs-2">{{ form.note.label }}</label>
+			        <div class="col-xs-10">
+			        	{{ form.note(class_='form-control') }}
+				        {% if form.note.errors %}
+				            {% for e in form.note.errors %}
+				                <p class="help-block">{{ e }}</p>
+				            {% endfor %}
+				        {% endif %}
+				    </div>
+			    </div>
+		    </form>
+        </div>
+        <div class="modal-footer">
+            <a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
 			<button type="submit" class="btn btn-info">{{ label_operationtype }}</button>
-		</div>
-    </form>
-{% endblock body %}
-{% block javascript %}
-<script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
-<script src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
-<script type="text/javascript">
-$('#my-datepicker').datepicker({
-    keyboardNavigation: false,
-    forceParse: false,
-    autoclose: true,
-    todayHighlight: true,
-    format: "dd/mm/yyyy"
-});
-$('#my-datepicker2').datepicker({
-    keyboardNavigation: false,
-    forceParse: false,
-    autoclose: true,
-    todayHighlight: true,
-    format: "dd/mm/yyyy",
-});
-$('.selectpicker').selectpicker({
-      style: 'btn-custom'  
-});
-</script>
-{% endblock javascript %}
+        </div>
+    </div>
+</div>
