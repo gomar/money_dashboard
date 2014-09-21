@@ -1,0 +1,12 @@
+.DS_Store
+*~
+*.pyc
+.sass-cache
+
+*.db
+
+*.nw
+
+*.xls
+
+*.csv

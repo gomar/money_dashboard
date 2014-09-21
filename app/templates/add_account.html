@@ -1,0 +1,77 @@
+{% extends 'common/layout.html' %}
+{% import 'common/form_macros.html' as macros %}
+{% block css %}
+<link href="{{ url_for('static', filename='css/bootstrap-select.min.css') }}" rel="stylesheet">
+<style type="text/css">
+	.btn-custom { 
+		background-color: #ffffff;
+		background-image: none;
+		border: 1px solid #dce4ec;
+		border-radius: 3px;
+		border-width: 2px;
+		-webkit-box-shadow: none;
+		box-shadow: none;
+  	}
+  	.btn-custom:hover {
+  		color: inherit;
+  	}
+  	.btn-custom:focus,
+	.btn-custom:active:focus,
+	.btn-custom.active:focus {
+  		color: inherit;
+  border-color: #2c3e50;
+  outline: 0;
+  	}
+</style>
+{% endblock css %}
+{% block body %}
+	<div class="page-header">
+		<h3>Create a new account</h3>
+	</div>
+	<form method="POST" action="{{ action_url }}" role="form" class="form-horizontal">
+		{{ form.csrf_token }}
+		<!-- NAME -->
+	   	<div class="form-group {% if form.name.errors %}has-error{% endif %}">
+	        <label class="control-label col-xs-2">{{ form.name.label }}</label>
+	        <div class="col-xs-10">
+	        	{{ form.name(class_='form-control') }}
+		        {% if form.name.errors %}
+		            {% for e in form.name.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- INITIAL BALANCE -->
+	   	<div class="form-group {% if form.initial_balance.errors %}has-error{% endif %}">
+	        <label class="control-label col-xs-2">{{ form.initial_balance.label }}</label>
+	        <div class="col-xs-2">
+	        	{{ form.initial_balance(class_='form-control') }}
+		        {% if form.initial_balance.errors %}
+		            {% for e in form.initial_balance.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+		    <div class="col-xs-8">
+		    {% for value, label, _ in form.currency.iter_choices() %}
+	            <label class="radio-inline">
+	                <input type="radio" name="{{ form.currency.id }}" id="{{ form.currency.id }}" value="{{ value }}">{{ label | safe}}
+	            </label>
+		    {% endfor %}
+		    </div>
+	    </div>
+	   	<div class="btn-group pull-right">
+	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
+			<button type="submit" class="btn btn-info">Add account</button>
+		</div>
+    </form>
+{% endblock body %}
+{% block javascript %}
+<script src="{{ url_for('static', filename='js/bootstrap-select.min.js') }}"></script>
+<script type="text/javascript">
+$('.selectpicker').selectpicker({
+      style: 'btn-custom'  
+});
+</script>
+{% endblock javascript %}

@@ -1,0 +1,120 @@
+{% extends 'common/layout.html' %}
+{% block css %}
+<link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+<style type="text/css">
+.top-buffer { margin-top:2px; }
+.form-group button {
+    background-color: #ecf0f1 !important;
+    color: #2C3E50 !important;
+    border: #dce4ec !important;
+}
+.span6 h5 {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+</style>
+{% endblock css %}
+{% block body %}
+	<div class="page-header">
+		<h3>Summary
+		<div class="col-xs-5" style="float: right">
+			<form method="POST" action="" role="form">
+				{{ form.csrf_token }}
+				<div class="form-group">
+					<div class="input-daterange input-group input-group-sm" id="datepicker">
+						<span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
+					  	{{ form.start(class_='form-control') }}
+					  	<span class="input-group-addon">to</span>
+					  	{{ form.end(class_='form-control') }}
+					  	<span class="input-group-btn">
+				        	<button class="btn btn-default btn-sm" type="submit" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="analyse"><i class="fa fa-share"></i></button>
+					    </span>
+					</div>
+				</div>
+			</form>
+		</div>
+		</h3>
+	</div>
+	<h4>Global &nbsp;&nbsp; 
+		<small>
+			{% if (total_income + total_expense) > 0 %}
+				<span class="text-success"><i class='fa fa-chevron-up'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i></span>
+			{% else %}
+				<span class="text-danger"><i class='fa fa-chevron-down'></i> {{(total_income + total_expense) | abs | round | int}} <i class="fa fa-{{ currency }}"></i></span>
+			{% endif %}
+		</small>
+	</h4>
+	<div class="row">
+		<div class="col-xs-6 top-buffer text-right" style="padding: 6px;">
+			<h5>expense</h5>
+		</div>
+		<div class="col-xs-6 top-buffer text-left" style="padding: 6px;">
+			<h5>income</h5>
+		</div>
+		<div class="col-xs-6 top-buffer" style="padding: 3px;">
+
+			<div class="span6 pull-right text-right" {% if total_expense | abs > 0 %}style="width: {{ total_expense_width | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;color:white;"{% endif %}>
+				<h5>{{total_expense | abs | round | int}} <i class="fa fa-{{ currency }}"></i>&nbsp;&nbsp;&nbsp;</h5>
+			</div>
+		</div>
+		<div class="col-xs-6 top-buffer" style="padding: 3px;">
+			<div class="span6 pull-left" {% if total_income | abs > 0 %}style="width: {{ total_income_width | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;color:white;"{% endif %}>
+				<h5>&nbsp;&nbsp;&nbsp;{{total_income | abs | round | int}} <i class="fa fa-{{ currency }}"></i></h5>
+			</div>
+		</div>
+	</div>
+	<br>
+	<h4>Per category &nbsp;&nbsp; <a href="/{{ csv_fname }}" target="_blank" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="download data"><i class="fa fa-download"></i></a></h4>
+	<div class="row">
+		{% for item in data %}
+			{% if item[4] < 0 %}
+				<a href="./{{ item[5] }}">
+					<div class="col-xs-6 top-buffer" style="padding: 0;" rel="tooltip" data-toggle="tooltip" data-placement="right" title="click to reveal corresponding transactions">
+						<div class="span6 pull-right" style="width: {{ item[4] | abs | round | int + 1}}%; background-color: #E74C3C;border-radius:3px;"><h5>&nbsp;</h5></div>
+						<div class="span6 pull-right" style="color:#2C3E50;">
+							<h6>{{ item[1] | abs | round | int}} <i class="fa fa-{{ currency }}"></i>&nbsp; &nbsp;</h6>
+						</div>
+					</div>
+				</a>
+				<div class="col-xs-6 top-buffer">
+					<div class="span6 pull-left"><h5>{{item[3] | safe }} <small>{{item[2]}}</small></h5></div>
+				</div>
+				<br>
+			{% endif %}
+		{% endfor %}
+		{% for item in data %}
+			{% if item[4] > 0 %}
+				<div class="col-xs-6 top-buffer">
+					<div class="span6 pull-right"><h5><small>{{item[2]}}</small> {{item[3] | safe }} </h5></div>
+				</div>
+				<a href="./{{ item[5] }}">
+					<div class="col-xs-6 top-buffer" style="padding: 0;" rel="tooltip" data-toggle="tooltip" data-placement="left" title="click to reveal corresponding transactions">
+						<div class="span6 pull-left" style="width: {{ item[4] | abs | round | int + 1}}%; background-color: #18BC9C;border-radius:3px;">
+							<h5>&nbsp;</h5>
+						</div>
+						<div class="span6 pull-left" style="color:#2C3E50;">
+							<h6>&nbsp; &nbsp; {{ item[1] | abs | round | int}} <i class="fa fa-{{ currency }}"></i></h6>
+						</div>
+					</div>
+				</a>
+				<br>
+			{% endif %}
+		{% endfor %}
+	</div>
+	<br>
+	<br>
+{% endblock body %}
+{% block javascript %}
+<script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+<script type="text/javascript">
+$('.input-daterange').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    todayHighlight: true,
+    format: "dd/mm/yyyy",
+    startDate: "{{ min_date }}"
+});
+</script>
+{% endblock javascript %}
