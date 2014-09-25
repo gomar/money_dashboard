@@ -123,9 +123,42 @@ def intro():
 
 @app.route('/accounts')
 def home():
-    accounts = get_balance()
+    data = get_balance()
+
+    pd.set_option('display.max_colwidth', 2000)
+
+    data['action'] = ('<div class="btn-group">'
+                      '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
+                      '         <i class="fa fa-cog"></i>'
+                      '    </a>'
+                      '<ul class="dropdown-menu" role="menu">')
+    data['action'] += ('<li>'
+                       '<a href="/delete_account/' + data['id'].astype(str) + 
+                       '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
+    data['action'] += '</ul></div'
+
+    # sorting based on currency and name
+    data = data.sort(['currency', 'name'])
+
+    # adding currency to amount
+    data['amount'] = '<span class="pull-right">' + data['amount'].astype(str) + ' <i class="fa fa-' + data['currency'] + '"></i></span>' 
+
+    # displaying the pandas data as an html table
+    data = data[['id', 'action', 'name', 'amount']]
+
+    data['name'] = (data['name'] + '&nbsp;&nbsp;<a href=/account/' + data['id'].astype(str) + '/transactions ' +
+                    'class="btn btn-xs" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="select account">'
+                    '    <i class="fa fa-chevron-right"></i>'
+                    '</a></div>')
+
+    del data['id']
+
+    data = data.rename(columns={'amount': '<span class="pull-right">amount</span>'})
+
+    data = data.to_html(classes=['table table-hover table-bordered table-striped'], 
+                        index=False, escape=False, na_rep='')
     return render_template('accounts.html', 
-                           accounts=accounts.T.to_dict(),
+                           data=data,
                            **context)
 
 
@@ -194,7 +227,7 @@ def transactions(account_id):
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
                   '<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
     data['action'] += '</ul></div>'
 
     # sorting based on descending date
@@ -469,7 +502,7 @@ def scheduled_transactions(account_id):
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
                   '<a href="/delete_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
     data['action'] += '</ul></div>'
 
     # sorting based on next occurence
@@ -740,7 +773,7 @@ def transactions_category(account_id, category_id, date_range):
                   '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
                   '<a href="/delete_transaction/' + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Remove</a></li>')
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
     data['action'] += '</ul></div>'
 
     # sorting based on descending date

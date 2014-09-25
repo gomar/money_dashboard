@@ -1,6 +1,11 @@
 {% extends 'common/layout.html' %}
 {% block css %}
     <link href="{{ url_for('static', filename='css/bootstrap-dialog.css') }}" rel="stylesheet">
+    <style type="text/css">
+    .table {
+        font-size: 16px 
+    }
+    </style>
 {% endblock %}
 {% block body %}
     <div class="page-header">
@@ -10,44 +15,7 @@
             </a>
         </h3>
     </div>
-    {% for account in accounts.values() %}
-	<div class="col-xs-6">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-			    <h3 class="panel-title">{{ account.name }}
-			   	<div class="btn-toolbar pull-right" role="toolbar">
-			    	<div class="btn-group btn-group-xs">
-			    		<a href="/delete_account/{{ account.id }}" class="btn btn-danger confirmdelete" role="button"><i class="fa fa-trash-o"></i></a>
-						<a href="/account/{{ account.id }}/transactions" class="btn btn-primary" role="button">select</a>
-					</div>
-				</div>
-				</h3>
-			</div>
-			<div class="panel-body">
-			    <!-- current balance -->
-			    <div class="row">
-			      <div class="col-xs-7 text-right">
-			        <small><strong>current balance</strong></small>
-			      </div>
-			      <div class="col-xs-5 text-right">
-			          {{ "%.2f"| format(account.amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
-			      </div>
-			    </div>
-                <!-- end of month balance -->
-                {% if account.amount != account.end_of_month_amount %}
-                    <div class="row">
-                      <div class="col-xs-7 text-right">
-                        <small><strong>end of month balance</strong></small>
-                      </div>
-                      <div class="col-xs-5 text-right">
-                          {{ "%.2f"| format(account.end_of_month_amount) }} &nbsp;<i class="fa fa-{{account.currency}}"></i>
-                      </div>
-                    </div>
-                {% endif %}
-			</div>
-		</div>
-	</div>
-	{% endfor %}
+    {{ data | safe }}
 {% endblock %}
 {% block javascript %}
 	<script src="{{ url_for('static', filename='js/bootstrap-dialog.min.js') }}"></script>
