@@ -36,18 +36,15 @@
                     <small style="color: #2C3E50;">
                         monthly total &nbsp;
                     </small>
-                    <i class="fa fa-chevron-{% if (monthly_income + monthly_expense) > 0 %}up{% else %}down{% endif %} fa-fw"></i> 
                     {{ "%.2f"| format(monthly_income + monthly_expense) }} <i class="fa fa-{{ currency }}"></i>
                 </h4>
                 <h4>
                     <small style="color: #2C3E50;">
                         <span class="text-success">
-                            <i class="fa fa-chevron-up fa-fw"></i> 
                             {{ "%.2f"| format(monthly_income) }}
                             <i class="fa fa-{{ currency }}"></i>
-                        </span>
+                        </span>&nbsp;&nbsp;
                         <span class="text-danger">
-                            <i class="fa fa-chevron-down fa-fw"></i> 
                             {{ "%.2f"| format(monthly_expense) }}
                             <i class="fa fa-{{ currency }}"></i>
                         </span>
