@@ -48,6 +48,7 @@ class Account(db.Model):
     name = db.Column(db.Text)
     currency = db.Column(db.Text)
     reconciled_balance = db.Column(db.Numeric(precision=2))
+    reconciled_date = db.Column(db.Date)
 
     def __repr__(self):
         return '<name %r>' % self.name
