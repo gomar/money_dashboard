@@ -1,4 +1,7 @@
 {% extends 'common/layout.html' %}
+{% block css %}
+<link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+{% endblock %}
 {% block body %}
     <div class="page-header">
         <h3>Reconcile transactions </h3>
@@ -11,7 +14,7 @@
 	    <div class="form-group {% if form.previous_date_statement.errors %}has-error{% endif %}">
 	        <label class="control-label col-xs-2">{{ form.previous_date_statement.label }}</label>
 	        <div class="col-xs-4">
-		        {{ form.previous_date_statement(class_='form-control') }}
+		        {{ form.previous_date_statement(class_='form-control', disabled=true) }}
 		        {% if form.previous_date_statement.errors %}
 		            {% for e in form.previous_date_statement.errors %}
 		                <p class="help-block">{{ e }}</p>
@@ -19,7 +22,7 @@
 		        {% endif %}
 		    </div>
 		    <div class="col-xs-offset-1 col-xs-4">
-		        {{ form.new_date_statement(class_='form-control') }}
+		        {{ form.new_date_statement(class_='form-control', id="my-datepicker") }}
 		        {% if form.new_date_statement.errors %}
 		            {% for e in form.new_date_statement.errors %}
 		                <p class="help-block">{{ e }}</p>
@@ -32,7 +35,7 @@
 	        <label class="control-label col-xs-2">{{ form.previous_reconciled_amount.label }}</label>
 	        <div class="col-xs-4">
 	        	<div class="input-group">
-		        	{{ form.previous_reconciled_amount(class_='form-control') }}
+		        	{{ form.previous_reconciled_amount(class_='form-control', disabled=true) }}
 		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
 			    </div>
 		        {% if form.previous_reconciled_amount.errors %}
@@ -58,4 +61,17 @@
 			<button type="submit" class="btn btn-info">Go</button>
 		</div>
     </form>
+{% endblock %}
+{% block javascript %}
+<script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+<script type="text/javascript">
+$('#my-datepicker').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    todayHighlight: true,
+    format: "dd/mm/yyyy",
+    startDate: "{{ form.previous_date_statement.data }}"
+});
+</script>
 {% endblock %}

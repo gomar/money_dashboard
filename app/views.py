@@ -807,6 +807,10 @@ def transactions_category(account_id, category_id, date_range):
 def reconcile_transactions(account_id):
     form = forms.ReconcileTransactionsForm()
     account = models.Account.query.get(account_id)
+
+    form.previous_reconciled_amount.data = '%.2f' % account.reconciled_balance
+    form.previous_date_statement.data = account.reconciled_date
+ 
     return render_template('reconcile_form.html', form=form,
                            currency=account.currency,
                            account_id=account_id, **context)
