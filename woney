@@ -1,7 +1,13 @@
-#/bin/bash
+#!/usr/bin/env python
+import os, time
+from threading import Thread
+import subprocess
 
-cd /Users/adriengomar/Documents/PERSONAL/WEB_APP/WONEY
-python run.py &
-sleep 10
-/Applications/node-webkit.app/Contents/MacOS/node-webkit package.nw
-kill %%
+os.chdir('/Users/adriengomar/Documents/PERSONAL/WEB_APP/WONEY/')
+
+from app import app
+
+thread = Thread(target=app.run)
+thread.start()
+time.sleep(10)
+subprocess.call(['/Applications/node-webkit.app/Contents/MacOS/node-webkit', 'package.nw'])

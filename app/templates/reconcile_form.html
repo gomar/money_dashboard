@@ -61,6 +61,7 @@
 			<button type="submit" class="btn btn-info">Go</button>
 		</div>
     </form>
+    {{ data | safe }}
 {% endblock %}
 {% block javascript %}
 <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
@@ -73,5 +74,14 @@ $('#my-datepicker').datepicker({
     format: "dd/mm/yyyy",
     startDate: "{{ form.previous_date_statement.data }}"
 });
+$(function() {
+    $('.chkclass').click(function() {
+        var sum = 0;
+        $('.chkclass:checked').each(function() {
+            sum += parseFloat($(this).closest('tr').find('.wagein').text());
+        });
+        alert(sum);
+    });
+​});
 </script>
 {% endblock %}
