@@ -802,6 +802,16 @@ def transactions_category(account_id, category_id, date_range):
                            currency=account.currency, category=category_name(int(category_id)), 
                            account_id=account_id, **context)
 
+
+@app.route('/account/<int:account_id>/reconcile')
+def reconcile_transactions(account_id):
+    form = forms.ReconcileTransactionsForm()
+    account = models.Account.query.get(account_id)
+    return render_template('reconcile_form.html', form=form,
+                           currency=account.currency,
+                           account_id=account_id, **context)
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html', **context), 404

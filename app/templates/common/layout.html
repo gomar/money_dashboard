@@ -40,6 +40,11 @@
                       <i class="fa fa-bar-chart-o"></i>
                   </a>
                 </li>
+                <li {% if request.path | is_in('reconcile') %}class="active"{% endif %}>
+                  <a href="/account/{{ account_id }}/reconcile" rel="tooltip" data-toggle="tooltip" data-placement="bottom" title="reconcile transactions">
+                      <i class="fa fa-check-square-o"></i>
+                  </a>
+                </li>
               </ul>
               {% endif %}
             </div><!--/.nav-collapse -->

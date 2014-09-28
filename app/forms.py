@@ -51,3 +51,11 @@ class AddAccount(Form):
                                                        ['months', 'weeks', 'days']), 
                              validators=[DataRequired()])
     initial_balance = TextField('initial balance', default=0, validators=[DataRequired()])
+
+
+class ReconcileTransactionsForm(Form):
+    previous_date_statement = DateField('date', format='%d/%m/%Y')
+    previous_reconciled_amount = TextField('amount', validators=[DataRequired()])
+
+    new_date_statement = DateField('date', format='%d/%m/%Y')
+    new_reconciled_amount = TextField('amount', validators=[DataRequired()])
