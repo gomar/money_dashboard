@@ -146,7 +146,8 @@ def home():
     # displaying the pandas data as an html table
     data = data[['id', 'action', 'name', 'amount']]
 
-    data['name'] = (data['name'] + '&nbsp;&nbsp;<a href=/account/' + data['id'].astype(str) + '/transactions ' +
+    data['name'] = ('<i class="fa fa-square" style="color: #E74C3C;"></i> &nbsp;&nbsp;' +
+                    data['name'] + '&nbsp;&nbsp;<a href=/account/' + data['id'].astype(str) + '/transactions ' +
                     'class="btn btn-xs" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="select account">'
                     '    <i class="fa fa-chevron-right"></i>'
                     '</a></div>')
