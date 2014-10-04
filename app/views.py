@@ -805,6 +805,8 @@ def transactions_category(account_id, category_id, date_range):
 
 @app.route('/account/<int:account_id>/reconcile', methods=['GET', 'POST'])
 def reconcile_transactions(account_id):
+    pd.set_option('display.max_colwidth', 2000)
+
     form = forms.ReconcileTransactionsForm()
     account = models.Account.query.get(account_id)
 
@@ -817,8 +819,6 @@ def reconcile_transactions(account_id):
     form.reconciled_transactions.choices = zip(data['id'].values, data['id'].values)
 
     data['checked'] = [str(i) for i in form.reconciled_transactions]
-
-    pd.set_option('display.max_colwidth', 2000)
 
     data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
@@ -867,7 +867,8 @@ def reconcile_transactions(account_id):
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
 
     if form.is_submitted():
-        print form.reconciled_transactions.data
+        for transaction in form.reconciled_transactions.data:
+            print models.Transaction.query.get(transaction).amount
 
     return render_template('reconcile_form.html', form=form,
                            currency=account.currency, data=data,

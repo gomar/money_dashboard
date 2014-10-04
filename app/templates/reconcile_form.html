@@ -60,8 +60,9 @@
 	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
 			<button type="submit" class="btn btn-info">Go</button>
 		</div>
-    </form>
     {{ data | safe }}
+    </form>
+
 {% endblock %}
 {% block javascript %}
 <script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
