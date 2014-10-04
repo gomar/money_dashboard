@@ -70,4 +70,7 @@ class ReconcileTransactionsForm(Form):
     new_date_statement = DateField('date', format='%d/%m/%Y')
     new_reconciled_amount = TextField('amount', validators=[DataRequired()])
 
+
+class ReconcileCheckTransactionsForm(Form):
+
     reconciled_transactions = MultiCheckboxField('reconciled')

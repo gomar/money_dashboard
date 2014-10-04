@@ -7,3 +7,4 @@
 - souligne dans actions de transactions
 - auto sauvegarde des donnees: par jour, par mois et par semaine
 - mis à jour vue transaction après graphs
+- reprendre la ou on s'etait arreter sur le rapprochement is tmp non null

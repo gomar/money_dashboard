@@ -50,6 +50,9 @@ class Account(db.Model):
     reconciled_balance = db.Column(db.Numeric(precision=2))
     reconciled_date = db.Column(db.Date)
 
+    tmp_reconciled_balance = db.Column(db.Numeric(precision=2))
+    tmp_reconciled_date = db.Column(db.Date)
+
     def __repr__(self):
         return '<name %r>' % self.name
 
