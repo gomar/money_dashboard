@@ -17,6 +17,7 @@ class Transaction(db.Model):
     note = db.Column(db.Text)
     operation_type = db.Column(db.Text)
     cheque_number = db.Column(db.Integer)
+    reconciled = db.Column(db.Boolean)
     transfer_to = db.relationship("Transaction", 
                                   secondary=transfer,
                                   primaryjoin=id==transfer.c.from_account,

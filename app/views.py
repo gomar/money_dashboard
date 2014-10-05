@@ -75,7 +75,8 @@ def account_name(url):
 
 def get_balance():
     accounts = pd.read_sql_table('account', db.engine)
-    transactions = pd.read_sql_table('transaction', db.engine, columns=['account', 'amount'])
+    transactions = pd.read_sql_table('transaction', db.engine, columns=['account', 'amount', 'reconciled'])
+    transactions = transactions[transactions['reconciled'] != True]
     scheduled_transactions = pd.read_sql_table('scheduled_transaction', 
                                                db.engine) 
 
@@ -206,6 +207,7 @@ def delete_account(account_id):
 def transactions(account_id):
     account = models.Account.query.get(account_id)
     data = pd.read_sql_table('transaction', db.engine)
+    data = data[data['reconciled'] != True]
     data = data[data['account'] == account.name]
 
 
@@ -749,6 +751,7 @@ def transactions_category(account_id, category_id, date_range):
     end_date = datetime.datetime.strptime(date_range[8:], '%d%m%Y')
 
     data = pd.read_sql_table('transaction', db.engine)
+
     data = data[(data['account'] == account.name) & 
                 (data['category'] == category_name(int(category_id))) &
                 (data['date'] >= start_date) &
@@ -826,11 +829,13 @@ def reconcile_transactions_2(account_id):
     account = models.Account.query.get(account_id)
 
     data = pd.read_sql_table('transaction', db.engine)
+    data = data[data['reconciled'] != True]
     data = data[data['account'] == account.name]
 
-    form.reconciled_transactions.choices = zip(data['id'].values, data['id'].values)
+    form.reconciled_transactions.choices = zip(data['id'].astype(str).values, 
+                                               data['id'].astype(str).values)
 
-    data['checked'] = [str(i) for i in form.reconciled_transactions]
+    data['checked'] = [i for i in form.reconciled_transactions]
 
     data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
@@ -880,10 +885,18 @@ def reconcile_transactions_2(account_id):
 
     diff = account.reconciled_balance - account.tmp_reconciled_balance
 
-    # if form.validate_on_submit():
-    #     account.tmp_reconciled_balance = None
-    #     account.tmp_reconciled_date = None
+    if form.validate_on_submit() :
+        for transaction_id in form.reconciled_transactions.data:
+            transaction = models.Transaction.query.get(int(transaction_id))
+            transaction.reconciled = True
 
+        account.reconciled_balance = account.tmp_reconciled_balance
+        account.reconciled_date = account.tmp_reconciled_date
+
+        account.tmp_reconciled_date = None
+        account.tmp_reconciled_balance = None
+        db.session.commit()
+        return redirect('/account/%d/transactions' % account_id)
 
     return render_template('reconcile_check.html', form=form, diff='%.2f' % diff,
                            currency=account.currency, data=data,
