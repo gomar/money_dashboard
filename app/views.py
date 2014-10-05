@@ -878,12 +878,14 @@ def reconcile_transactions_2(account_id):
 
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
 
-    if form.validate_on_submit():
-        account.tmp_reconciled_balance = None
-        account.tmp_reconciled_date = None
+    diff = account.reconciled_balance - account.tmp_reconciled_balance
+
+    # if form.validate_on_submit():
+    #     account.tmp_reconciled_balance = None
+    #     account.tmp_reconciled_date = None
 
 
-    return render_template('reconcile_check.html', form=form,
+    return render_template('reconcile_check.html', form=form, diff='%.2f' % diff,
                            currency=account.currency, data=data,
                            account_id=account_id, **context)
 
