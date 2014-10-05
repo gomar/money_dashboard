@@ -1,0 +1,78 @@
+{% extends 'common/layout.html' %}
+{% block css %}
+<link href="{{ url_for('static', filename='css/datepicker3.css') }}" rel="stylesheet">
+{% endblock %}
+{% block body %}
+    <div class="page-header">
+        <h3>Reconcile transactions </h3>
+    </div>
+    <h4 class="col-xs-offset-2 col-xs-4"> Previous statement </h4>
+    <h4 class="col-xs-4"> New statement </h4>
+    <form method="POST" action="{{ action_url }}" role="form" class="form-horizontal col-xs-12">
+		{{ form.csrf_token }}
+		<!-- PREVIOUS DATE STATEMENT -->
+	    <div class="form-group {% if form.previous_date_statement.errors %}has-error{% endif %}">
+	        <label class="control-label col-xs-2">{{ form.previous_date_statement.label }}</label>
+	        <div class="col-xs-4">
+		        {{ form.previous_date_statement(class_='form-control', disabled=true) }}
+		        {% if form.previous_date_statement.errors %}
+		            {% for e in form.previous_date_statement.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+		    <div class="col-xs-4">
+		        {{ form.new_date_statement(class_='form-control', id="my-datepicker") }}
+		        {% if form.new_date_statement.errors %}
+		            {% for e in form.new_date_statement.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	    <!-- PREVIOUS RECONCILE AMOUNT -->
+	   	<div class="form-group {% if form.previous_reconciled_amount.errors %}has-error{% endif %}">
+	        <label class="control-label col-xs-2">{{ form.previous_reconciled_amount.label }}</label>
+	        <div class="col-xs-4">
+	        	<div class="input-group">
+		        	{{ form.previous_reconciled_amount(class_='form-control', disabled=true) }}
+		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
+			    </div>
+		        {% if form.previous_reconciled_amount.errors %}
+		            {% for e in form.previous_reconciled_amount.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+		    <div class="col-xs-4">
+		        <div class="input-group">
+		        	{{ form.new_reconciled_amount(class_='form-control') }}
+		        	<div class="input-group-addon"><i class="fa fa-{{ currency }}"></i></div>
+			    </div>
+		        {% if form.new_reconciled_amount.errors %}
+		            {% for e in form.new_reconciled_amount.errors %}
+		                <p class="help-block">{{ e }}</p>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+	    </div>
+	   	<div class="btn-group pull-right">
+	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Cancel</a>
+			<button type="submit" class="btn btn-info">Next</button>
+		</div>
+    </form>
+
+{% endblock %}
+{% block javascript %}
+<script src="{{ url_for('static', filename='js/bootstrap-datepicker.js') }}"></script>
+<script type="text/javascript">
+$('#my-datepicker').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    todayHighlight: true,
+    format: "dd/mm/yyyy",
+    startDate: "{{ form.previous_date_statement.data.strftime('%d/%m/%Y') }}"
+});
+</script>
+{% endblock %}

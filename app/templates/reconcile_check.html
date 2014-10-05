@@ -1,0 +1,31 @@
+{% extends 'common/layout.html' %}
+{% block body %}
+    <form method="POST" action="{{ action_url }}" role="form" class="form-horizontal col-xs-12">
+    <div class="page-header">
+        <h3>Reconcile transactions</h3>
+        <h5 id='test'>sum</h5>
+    </div>
+    	{{ form.csrf_token }}
+		<div class="btn-group pull-right">
+	    	<a href="javascript:history.back()" class="btn btn-default" role="button">Abort</a>
+			<button type="submit" class="btn btn-info">Finish</button>
+		</div>
+		{{ data | safe }}
+    </form>
+
+{% endblock %}
+{% block javascript %}
+<script type="text/javascript">
+$(document).ready(function () {
+	checkboxes = document.getElementsByTagName("input"); 
+	for (var i = 0; i < checkboxes.length; i++) {
+	    var checkbox = checkboxes[i];
+	    checkbox.onclick = function() {
+	        var currentRow = this.parentNode.parentNode;
+	        var secondColumn = currentRow.getElementsByTagName("td")[4];
+	        $('#test').text(secondColumn.textContent);
+	    };
+	}
+});
+</script>
+{% endblock %}

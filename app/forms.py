@@ -1,8 +1,18 @@
 from flask_wtf import Form
-from wtforms import TextField, DateField, SelectField, RadioField, BooleanField
+from wtforms import TextField, DateField, SelectField, RadioField, BooleanField, SelectMultipleField, widgets
 from wtforms.validators import DataRequired, length, ValidationError, NumberRange, Regexp
 from unidecode import unidecode
 import pandas as pd
+
+class MultiCheckboxField(SelectMultipleField):
+    """
+    A multiple-select, except displays a list of checkboxes.
+
+    Iterating the field will produce subfields, allowing custom rendering of
+    the enclosed checkbox fields.
+    """
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
 
 
 class AddTransactionForm(Form):
@@ -51,3 +61,16 @@ class AddAccount(Form):
                                                        ['months', 'weeks', 'days']), 
                              validators=[DataRequired()])
     initial_balance = TextField('initial balance', default=0, validators=[DataRequired()])
+
+
+class ReconcileTransactionsForm(Form):
+    previous_date_statement = DateField('date', format='%d/%m/%Y')
+    previous_reconciled_amount = TextField('amount', validators=[DataRequired()])
+
+    new_date_statement = DateField('date', format='%d/%m/%Y')
+    new_reconciled_amount = TextField('amount', validators=[DataRequired()])
+
+
+class ReconcileCheckTransactionsForm(Form):
+
+    reconciled_transactions = MultiCheckboxField('reconciled')

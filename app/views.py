@@ -10,6 +10,8 @@ from app import app, db, models, utils
 from itertools import count
 from sqlalchemy import desc
 
+# allowing large html display of pandas dataframe
+pd.set_option('display.max_colwidth', 2000)
 
 list_category = ['Vehicle', 
                  'Household Bills & Utilities', 
@@ -98,11 +100,11 @@ def get_balance():
     return accounts
 
 def category_id(category):
-    categories = list_category + ['Misc. Expense', 'Misc. Income']
+    categories = list_category + ['Transfer', 'Misc. Expense', 'Misc. Income']
     return categories.index(category)
 
 def category_name(category_id):
-    categories = list_category + ['Misc. Expense', 'Misc. Income']
+    categories = list_category + ['Transfer', 'Misc. Expense', 'Misc. Income']
     return categories[category_id]
 
 app.jinja_env.filters['is_in'] = is_in
@@ -124,8 +126,6 @@ def intro():
 @app.route('/accounts')
 def home():
     data = get_balance()
-
-    pd.set_option('display.max_colwidth', 2000)
 
     data['action'] = ('<div class="btn-group">'
                       '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
@@ -208,7 +208,6 @@ def transactions(account_id):
     data = pd.read_sql_table('transaction', db.engine)
     data = data[data['account'] == account.name]
 
-    pd.set_option('display.max_colwidth', 2000)
 
     data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
@@ -478,7 +477,6 @@ def scheduled_transactions(account_id):
 
     data = data.rename(columns={'next_occurence': 'next occurence'})
 
-    pd.set_option('display.max_colwidth', 2000)
 
     # category icons
     data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
@@ -756,8 +754,6 @@ def transactions_category(account_id, category_id, date_range):
                 (data['date'] >= start_date) &
                 (data['date'] <= end_date)]
 
-    pd.set_option('display.max_colwidth', 1000)
-
     data['action'] = ('<div class="btn-group">'
                  '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
                  '         <i class="fa fa-cog"></i>'
@@ -800,6 +796,95 @@ def transactions_category(account_id, category_id, date_range):
                         index=False, escape=False, na_rep='')
     return render_template('transactions.html', data=data, 
                            currency=account.currency, category=category_name(int(category_id)), 
+                           account_id=account_id, **context)
+
+
+@app.route('/account/<int:account_id>/reconcile', methods=['GET', 'POST'])
+def reconcile_transactions_1(account_id):
+
+    form = forms.ReconcileTransactionsForm()
+    account = models.Account.query.get(account_id)
+
+    form.previous_reconciled_amount.data = '%.2f' % account.reconciled_balance
+    form.previous_date_statement.data = account.reconciled_date
+
+    if form.validate_on_submit():
+        account.tmp_reconciled_balance = form.new_reconciled_amount.data
+        account.tmp_reconciled_date = form.new_date_statement.data
+        db.session.commit()
+        return redirect('/account/%d/reconcile_check' % account.id)
+
+    return render_template('reconcile_form.html', form=form,
+                           currency=account.currency,
+                           account_id=account_id, **context)
+
+
+@app.route('/account/<int:account_id>/reconcile_check', methods=['GET', 'POST'])
+def reconcile_transactions_2(account_id):
+
+    form = forms.ReconcileCheckTransactionsForm()
+    account = models.Account.query.get(account_id)
+
+    data = pd.read_sql_table('transaction', db.engine)
+    data = data[data['account'] == account.name]
+
+    form.reconciled_transactions.choices = zip(data['id'].values, data['id'].values)
+
+    data['checked'] = [str(i) for i in form.reconciled_transactions]
+
+    data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
+
+    data['action'] = ('<div class="btn-group">'
+                 '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
+                       '         <i class="fa fa-cog"></i>'
+                       '    </a>'
+                 '<ul class="dropdown-menu" role="menu">')
+    data['action'] += np.where(data['note'] != '', 
+                          ('<li>'
+                           '<a href="/info_transaction/' + data['id'].astype(str) + 
+                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                           '</li>'),
+                          '')
+    data['action'] += ('<li>'
+                  '<a href="/edit_transaction/account/%s/' % account_id + data['id'].astype(str) + 
+                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+    data['action'] += ('<li>'
+                  '<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) + 
+                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
+    data['action'] += '</ul></div>'
+
+    # sorting based on descending date
+    data = data.sort(['date'], ascending=False)
+
+    # adding the total amount
+    currency = '(<i class="fa fa-%s"></i>)' % account.currency
+    data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1] + float(account.reconciled_balance)
+
+    # replacing amount by in and out for easier reading
+    data['amount %s' % currency] = np.nan
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+
+    # displaying the pandas data as an html table
+    data = data[['action', 'date', 'description', 'category', 
+                 'amount %s' % currency, 
+                 'balance  %s' % currency, 'checked']]
+
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed chkclass'], 
+                        index=False, escape=False, na_rep='')
+    accounts = get_balance()
+    cur_balance = accounts.ix[accounts.name == account.name, 'amount'].values[0]
+    eom_balance = accounts.ix[accounts.name == account.name, 'end_of_month_amount'].values[0]
+
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+
+    if form.validate_on_submit():
+        account.tmp_reconciled_balance = None
+        account.tmp_reconciled_date = None
+
+
+    return render_template('reconcile_check.html', form=form,
+                           currency=account.currency, data=data,
                            account_id=account_id, **context)
 
 @app.errorhandler(404)
