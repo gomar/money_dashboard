@@ -1,7 +1,6 @@
 from flask_wtf import Form
 from wtforms import TextField, DateField, SelectField, RadioField, BooleanField, SelectMultipleField, widgets
 from wtforms.validators import DataRequired, length, ValidationError, NumberRange, Regexp
-from unidecode import unidecode
 import pandas as pd
 
 class MultiCheckboxField(SelectMultipleField):
