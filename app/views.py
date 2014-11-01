@@ -122,6 +122,25 @@ def category_id(category):
 def category_name(category_id):
     return list_category_extended[category_id]
 
+
+def action_button(df, list_action, other_buttons=None):
+    return html.div(class_="btn-group")(
+        html.a(class_="btn btn-xs dropdown-toggle text-primary",
+               data_toggle="dropdown")(
+            html.i(class_="fa fa-cog")),
+            html.ul(class_="dropdown-menu",
+                    role="menu")(list_action),
+        other_buttons).render().replace('\n', '')
+
+
+def category_icon(df):
+    return html.i(class_="fa %s" % dict_category2icon[df['category']],
+                  rel="tooltip",
+                  data_toggle="tooltip",
+                  data_placement="top",
+                  title=df['category'])
+
+
 app.jinja_env.filters['is_in'] = is_in
 app.jinja_env.filters['account_name'] = account_name
 
@@ -142,17 +161,12 @@ def intro():
 def home():
     data = get_balance()
 
-    action = lambda df: html.div(class_="btn-group")(
-        html.a(class_="btn btn-xs dropdown-toggle text-primary",
-               data_toggle="dropdown")(
-            html.i(class_="fa fa-cog")),
-        html.ul(class_="dropdown-menu",
-                role="menu")(
-            html.li(
-                html.a(href="/delete_account/%d" % df['id'],
-                       class_="confirmdelete")(
-                    html.i(class_="fa fa-trash-o fa-fw")('delete'))))
-        ).render().replace('\n', '')
+    action = lambda df: action_button(df=df,
+                                      list_action=[
+        html.li(
+            html.a(href="/delete_account/%d" % df['id'],
+                   class_="confirmdelete")(
+                html.i(class_="fa fa-trash-o fa-fw")('delete')))])
     data['action'] = data.apply(action, axis=1)
 
     # sorting based on currency and name
@@ -176,7 +190,7 @@ def home():
                title="select %s" % df['name'])(
             html.i(class_="fa fa-square",
                    style="color: #E74C3C;"),
-            "  " + df['name'] + "  ",
+            df['name'],
             html.i(class_="fa fa-chevron-right btn btn-xs"))).render().replace('\n', '')
     data['name'] = data.apply(name, axis=1)
 
@@ -243,31 +257,21 @@ def transactions(account_id):
                               "WHERE reconciled is not 1 "
                               "AND account = '%s'" % account.name), db.engine)
 
-    category = lambda df: html.i(class_="fa %s" % dict_category2icon[df['category']],
-                                 rel="tooltip",
-                                 data_toggle="tooltip",
-                                 data_placement="top",
-                                 title=df['category'])
-    data['category'] = data.apply(category, axis=1)
+    data['category'] = data.apply(category_icon, axis=1)
 
-    action = lambda df: html.div(class_="btn-group")(
-        html.a(class_="btn btn-xs dropdown-toggle text-primary",
-               data_toggle="dropdown")(
-            html.i(class_="fa fa-cog")),
-        html.ul(class_="dropdown-menu",
-                role="menu")(
-            html.li(
-                html.a(href="/info_transaction/account/%d/%d" % (account_id, df['id']),
-                       class_="transactioninfo")(
-                    html.i(class_="fa fa-info fa-fw")('information'))) if df['note'] != '' else '',
-            html.li(
-                html.a(href="/edit_transaction/account/%d/%d" % (account_id, df['id']))(
-                    html.i(class_="fa fa-edit fa-fw")('edit'))),
-            html.li(
-                html.a(href="/delete_transaction/account/%d/%d" % (account_id, df['id']),
-                       class_="confirmdelete")(
-                    html.i(class_="fa fa-trash-o fa-fw")('delete'))))
-        ).render().replace('\n', '')
+    action = lambda df: action_button(df=df,
+                                      list_action=[
+        html.li(
+            html.a(href="/info_transaction/%d" % df['id'],
+                   class_="transactioninfo")(
+                html.i(class_="fa fa-info fa-fw")('information'))) if df['note'] != '' else '',
+        html.li(
+            html.a(href="/edit_transaction/account/%d/%d" % (account_id, df['id']))(
+                html.i(class_="fa fa-edit fa-fw")('edit'))),
+        html.li(
+            html.a(href="/delete_transaction/account/%d/%d" % (account_id, df['id']),
+                   class_="confirmdelete")(
+                html.i(class_="fa fa-trash-o fa-fw")('delete')))])
     data['action'] = data.apply(action, axis=1)
 
     # sorting based on descending date
@@ -525,31 +529,11 @@ def scheduled_transactions(account_id):
     data = data.rename(columns={'next_occurence': 'next occurence'})
 
     # category icons
-    data['category'] = data['category'].map(
-        lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
+    data['category'] = data.apply(category_icon, axis=1)
 
     # every is mix of two columns
     data['every'] = data['every_nb'].astype(
         str) + ' ' + data['every_type'].astype(str)
-
-    data['action'] = ('<div class="btn-group">'
-                      '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
-                      '         <i class="fa fa-cog"></i>'
-                      '    </a>'
-                      '<ul class="dropdown-menu" role="menu">')
-    data['action'] += np.where(data['note'] != '',
-                               ('<li>'
-                                '<a href="/info_scheduled_transaction/' + data['id'].astype(str) +
-                                '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
-                                '</li>'),
-                               '')
-    data['action'] += ('<li>'
-                       '<a href="/edit_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) +
-                       '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
-    data['action'] += ('<li>'
-                       '<a href="/delete_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) +
-                       '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
-    data['action'] += '</ul></div>'
 
     # sorting based on next occurence
     data = data.sort('next occurence')
@@ -567,12 +551,37 @@ def scheduled_transactions(account_id):
     data['create_btn'] = np.where(
         data['next occurence'] <= datetime.datetime.now(), '#E74C3C', '#95a5a6')
 
-    data['action'] += ('<a href="/create_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmcreate" style="color:' + data['create_btn'] + ';" rel="tooltip" data-toggle="tooltip" data-placement="top" title="create">'
-                       '         <i class="fa fa-play-circle"></i>'
-                       '</a>')
-    data['action'] += ('<a href="/skip_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmskip" style="color:#95a5a6;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="skip">'
-                       '         <i class="fa fa-step-forward"></i>'
-                       '</a>')
+
+    action = lambda df: action_button(df=df, list_action=[
+        html.li(
+            html.a(href="/info_scheduled_transaction/%d" % df['id'],
+                   class_="transactioninfo")(
+                html.i(class_="fa fa-info fa-fw")('information'))) if df['note'] != '' else '',
+        html.li(
+            html.a(href="/edit_scheduled_transaction/account/%d/%d" % (account_id, df['id']))(
+                html.i(class_="fa fa-edit fa-fw")('edit'))),
+        html.li(
+            html.a(href="/delete_scheduled_transaction/account/%d/%d" % (account_id, df['id']),
+                   class_="confirmdelete")(
+                html.i(class_="fa fa-trash-o fa-fw")('delete')))],
+        other_buttons=[
+            html.a(href="/create_scheduled_transaction/%d/%d" % (account_id, df['id']),
+                   class_="btn btn-xs confirmcreate",
+                   style="color:%s;" % df['create_btn'],
+                   rel="tooltip",
+                   data_toggle="tooltip",
+                   data_placement="top",
+                   title="create")(
+                html.i(class_="fa fa-play-circle")),
+            html.a(href="/skip_scheduled_transaction/%d/%d" % (account_id, df['id']),
+                   class_="btn btn-xs confirmskip",
+                   style="color:#95a5a6;",
+                   rel="tooltip",
+                   data_toggle="tooltip",
+                   data_placement="top",
+                   title="skip")(
+                html.i(class_="fa fa-step-forward"))])
+    data['action'] = data.apply(action, axis=1)
 
     # displaying the pandas data as an html table
     data = data[['action', 'next occurence', 'description',
