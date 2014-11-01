@@ -1,44 +1,49 @@
-import os, datetime, calendar, time, dateutil
+import calendar
+import datetime
+import os
+
+from app import app, db, models
 from dateutil.relativedelta import relativedelta
-from flask import render_template, Flask, redirect, flash, abort
-from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
-import pandas as pd
-import numpy as np
+from flask import render_template, redirect, abort
 import forms
-from app import app, db, models, utils
-from itertools import count
+import pyhtml as html
+import numpy as np
+import pandas as pd
 from sqlalchemy import desc
+from sqlalchemy import or_
+
 
 # allowing large html display of pandas dataframe
 pd.set_option('display.max_colwidth', 2000)
 
-list_category = ['Vehicle', 
-                 'Household Bills & Utilities', 
+list_category = ['Vehicle',
+                 'Household Bills & Utilities',
                  'Home & Garden',
                  'Day to Day',
                  'Leisure & Holidays',
-                 'Clothing & Grooming', 
+                 'Clothing & Grooming',
                  'Healthcare',
                  'Childcare & Education',
                  'Salary',
                  'Tax']
+list_category_extended = list_category + \
+    ['Transfer', 'Misc. Expense', 'Misc. Income']
 
-dict_category2icon = {'Vehicle': 'fa-car', 
-'Household Bills & Utilities': 'fa-dollar', 
-'Home & Garden': 'fa-home',
-'Day to Day': 'fa-shopping-cart',
-'Leisure & Holidays': 'fa-glass',
-'Clothing & Grooming': 'fa-heart-o', 
-'Healthcare': 'fa-medkit',
-'Childcare & Education': 'fa-child',
-'Salary': 'fa-plus',
-'Tax': 'fa-gavel',
-'Misc. Income': 'fa-question-circle',
-'Misc. Expense': 'fa-question-circle', 
-'Transfer': 'fa-exchange'}
+dict_category2icon = {'Vehicle': 'fa-car',
+                      'Household Bills & Utilities': 'fa-dollar',
+                      'Home & Garden': 'fa-home',
+                      'Day to Day': 'fa-shopping-cart',
+                      'Leisure & Holidays': 'fa-glass',
+                      'Clothing & Grooming': 'fa-heart-o',
+                      'Healthcare': 'fa-medkit',
+                      'Childcare & Education': 'fa-child',
+                      'Salary': 'fa-plus',
+                      'Tax': 'fa-gavel',
+                      'Misc. Income': 'fa-question-circle',
+                      'Misc. Expense': 'fa-question-circle',
+                      'Transfer': 'fa-exchange'}
 
-list_currency = [('euro', u'Euro (<i class="fa fa-euro"></i>)'), 
+list_currency = [('euro', u'Euro (<i class="fa fa-euro"></i>)'),
                  ('gbp', u'British pound (<i class="fa fa-gbp"></i>)')]
 
 list_operation_type = ['credit card', 'online payment', 'cheque', 'other']
@@ -47,15 +52,16 @@ list_operation_type = ['credit card', 'online payment', 'cheque', 'other']
 def update_waiting_scheduled_transactions(account_name=None):
     if (os.path.exists(app.config['DB_FNAME'])) and (account_name is not None):
         return models.ScheduledTransaction.query\
-                    .filter(models.ScheduledTransaction.account
-                            == account_name)\
-                    .filter(models.ScheduledTransaction.next_occurence
-                            <= datetime.datetime.now())\
-                    .filter(or_(models.ScheduledTransaction.ends
-                            > datetime.datetime.now(),
-                            models.ScheduledTransaction.ends == None)).count()
+            .filter(models.ScheduledTransaction.account
+                    == account_name)\
+            .filter(models.ScheduledTransaction.next_occurence
+                    <= datetime.datetime.now())\
+            .filter(or_(models.ScheduledTransaction.ends
+                        > datetime.datetime.now(),
+                        models.ScheduledTransaction.ends is None)).count()
     else:
         return 0
+
 
 def is_in(url, target):
     url = url.split('/')
@@ -66,6 +72,7 @@ def is_in(url, target):
         target.remove('')
     return len(set(target) & set(url)) == len(target)
 
+
 def account_name(url):
     url = url.split('/')
     url.remove('')
@@ -73,12 +80,18 @@ def account_name(url):
     account = models.Account.query.get(int(url[idx_account + 1]))
     return account.name
 
+
 def get_balance():
     accounts = pd.read_sql_table('account', db.engine)
-    transactions = pd.read_sql_table('transaction', db.engine, columns=['account', 'amount', 'reconciled'])
-    transactions = transactions[transactions['reconciled'] != True]
-    scheduled_transactions = pd.read_sql_table('scheduled_transaction', 
-                                               db.engine) 
+
+    # reading transactions
+    transactions = pd.read_sql_query(("SELECT account, amount "
+                                      "FROM `transaction` "
+                                      "where reconciled is not 1"), db.engine)
+
+    # reading scheduled transactions
+    scheduled_transactions = pd.read_sql_table('scheduled_transaction',
+                                               db.engine)
 
     transactions = transactions.rename(columns={'account': 'name'})
     transactions = transactions.groupby('name', as_index=False).sum()
@@ -92,21 +105,22 @@ def get_balance():
         i = 0
         today = datetime.datetime.now()
         last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
-        while operation.next_occurence \
-            + relativedelta(**{operation.every_type: i * operation.every_nb}) \
-            <= last_day_of_month:
+        while (operation.next_occurence
+               + relativedelta(**{operation.every_type:
+                                  i * operation.every_nb})
+               <= last_day_of_month):
             i += 1
         accounts.ix[accounts['name'] == operation.account, 'end_of_month_amount'] += \
             operation.amount * i
     return accounts
 
+
 def category_id(category):
-    categories = list_category + ['Transfer', 'Misc. Expense', 'Misc. Income']
-    return categories.index(category)
+    return list_category_extended.index(category)
+
 
 def category_name(category_id):
-    categories = list_category + ['Transfer', 'Misc. Expense', 'Misc. Income']
-    return categories[category_id]
+    return list_category_extended[category_id]
 
 app.jinja_env.filters['is_in'] = is_in
 app.jinja_env.filters['account_name'] = account_name
@@ -119,8 +133,8 @@ context = {'now': datetime.datetime.now(),
 @app.route('/')
 def intro():
     for table in ['transaction', 'account', 'scheduled_transaction', 'transfer']:
-        pd.read_sql_table(table, db.engine).to_excel(os.path.join(app.config['DB_FOLDER'], 
-                                                                '%s.xls' % table))
+        pd.read_sql_table(table, db.engine).to_excel(os.path.join(app.config['DB_FOLDER'],
+                                                                  '%s.xls' % table))
     return render_template('intro.html')
 
 
@@ -128,38 +142,52 @@ def intro():
 def home():
     data = get_balance()
 
-    data['action'] = ('<div class="btn-group">'
-                      '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
-                      '         <i class="fa fa-cog"></i>'
-                      '    </a>'
-                      '<ul class="dropdown-menu" role="menu">')
-    data['action'] += ('<li>'
-                       '<a href="/delete_account/' + data['id'].astype(str) + 
-                       '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
-    data['action'] += '</ul></div'
+    action = lambda df: html.div(class_="btn-group")(
+        html.a(class_="btn btn-xs dropdown-toggle text-primary",
+               data_toggle="dropdown")(
+            html.i(class_="fa fa-cog")),
+        html.ul(class_="dropdown-menu",
+                role="menu")(
+            html.li(
+                html.a(href="/delete_account/%d" % df['id'],
+                       class_="confirmdelete")(
+                    html.i(class_="fa fa-trash-o fa-fw")('delete'))))
+        ).render().replace('\n', '')
+    data['action'] = data.apply(action, axis=1)
 
     # sorting based on currency and name
     data = data.sort(['currency', 'name'])
 
     # adding currency to amount
-    data['amount'] = '<span class="pull-right">' + data['amount'].astype(str) + ' <i class="fa fa-' + data['currency'] + '"></i></span>' 
+    amount = lambda x: html.span(class_="pull-right")(
+        str(x['amount']),
+        html.i(class_="fa fa-%s" % x['currency'])).render().replace('\n', '')
+    data['amount'] = data.apply(amount, axis=1)
 
     # displaying the pandas data as an html table
     data = data[['id', 'action', 'name', 'amount']]
 
-    data['name'] = ('<i class="fa fa-square" style="color: #E74C3C;"></i> &nbsp;&nbsp;' +
-                    data['name'] + '&nbsp;&nbsp;<a href=/account/' + data['id'].astype(str) + '/transactions ' +
-                    'class="btn btn-xs" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="select account">'
-                    '    <i class="fa fa-chevron-right"></i>'
-                    '</a></div>')
+    name = lambda df: html.span(
+        html.a(class_="text-primary noline",
+               href="/account/%d/transactions" % df['id'],
+               rel='tooltip',
+               data_toggle="tooltip",
+               data_placement="right",
+               title="select %s" % df['name'])(
+            html.i(class_="fa fa-square",
+                   style="color: #E74C3C;"),
+            "  " + df['name'] + "  ",
+            html.i(class_="fa fa-chevron-right btn btn-xs"))).render().replace('\n', '')
+    data['name'] = data.apply(name, axis=1)
 
     del data['id']
 
-    data = data.rename(columns={'amount': '<span class="pull-right">amount</span>'})
+    data = data.rename(columns={'amount': html.span(class_="pull-right")(
+                                                    "amount").render().replace('\n', '')})
 
-    data = data.to_html(classes=['table table-hover table-bordered table-striped'], 
+    data = data.to_html(classes=['table table-hover table-bordered table-striped'],
                         index=False, escape=False, na_rep='')
-    return render_template('accounts.html', 
+    return render_template('accounts.html',
                            data=data,
                            **context)
 
@@ -189,15 +217,18 @@ def delete_account(account_id):
     account = models.Account.query.get(account_id)
 
     # deleting all transactions
-    transactions = models.Transaction.query.filter(models.Transaction.account == account.name).all()
+    transactions = models.Transaction.query.filter(
+        models.Transaction.account == account.name).all()
     for transaction in transactions:
         db.session.delete(transaction)
 
     # deleting all scheduled transactions
-    scheduled_transactions = models.ScheduledTransaction.query.filter(models.ScheduledTransaction.account == account.name).all()
+    scheduled_transactions = models.ScheduledTransaction.query.filter(
+        models.ScheduledTransaction.account == account.name).all()
     for s_transaction in scheduled_transactions:
         db.session.delete(s_transaction)
 
+    # finally delete the account
     db.session.delete(account)
     db.session.commit()
     return redirect('/accounts')
@@ -206,58 +237,71 @@ def delete_account(account_id):
 @app.route('/account/<int:account_id>/transactions')
 def transactions(account_id):
     account = models.Account.query.get(account_id)
-    data = pd.read_sql_table('transaction', db.engine)
-    data = data[data['reconciled'] != True]
-    data = data[data['account'] == account.name]
 
+    data = pd.read_sql_query(("SELECT *"
+                              "FROM `transaction` "
+                              "WHERE reconciled is not 1 "
+                              "AND account = '%s'" % account.name), db.engine)
 
-    data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
+    category = lambda df: html.i(class_="fa %s" % dict_category2icon[df['category']],
+                                 rel="tooltip",
+                                 data_toggle="tooltip",
+                                 data_placement="top",
+                                 title=df['category'])
+    data['category'] = data.apply(category, axis=1)
 
-    data['action'] = ('<div class="btn-group">'
-                 '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
-                       '         <i class="fa fa-cog"></i>'
-                       '    </a>'
-                 '<ul class="dropdown-menu" role="menu">')
-    data['action'] += np.where(data['note'] != '', 
-                          ('<li>'
-                           '<a href="/info_transaction/' + data['id'].astype(str) + 
-                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
-                           '</li>'),
-                          '')
-    data['action'] += ('<li>'
-                  '<a href="/edit_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
-    data['action'] += ('<li>'
-                  '<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
-    data['action'] += '</ul></div>'
+    action = lambda df: html.div(class_="btn-group")(
+        html.a(class_="btn btn-xs dropdown-toggle text-primary",
+               data_toggle="dropdown")(
+            html.i(class_="fa fa-cog")),
+        html.ul(class_="dropdown-menu",
+                role="menu")(
+            html.li(
+                html.a(href="/info_transaction/account/%d/%d" % (account_id, df['id']),
+                       class_="transactioninfo")(
+                    html.i(class_="fa fa-info fa-fw")('information'))) if df['note'] != '' else '',
+            html.li(
+                html.a(href="/edit_transaction/account/%d/%d" % (account_id, df['id']))(
+                    html.i(class_="fa fa-edit fa-fw")('edit'))),
+            html.li(
+                html.a(href="/delete_transaction/account/%d/%d" % (account_id, df['id']),
+                       class_="confirmdelete")(
+                    html.i(class_="fa fa-trash-o fa-fw")('delete'))))
+        ).render().replace('\n', '')
+    data['action'] = data.apply(action, axis=1)
 
     # sorting based on descending date
     data = data.sort(['date'], ascending=False)
 
     # adding the total amount
-    currency = '(<i class="fa fa-%s"></i>)' % account.currency
-    data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1] + float(account.reconciled_balance)
+    currency = html.i(class_="fa fa-%s" % account.currency).render().replace('\n', '')
+    data['balance  %s' % currency] = data['amount'][
+        ::-1].cumsum()[::-1] + float(account.reconciled_balance)
 
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = np.nan
-    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
-    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + \
+        data[data['amount'] >= 0]['amount'].astype(str) + "</p>"
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + \
+        data[data['amount'] < 0]['amount'].astype(str) + "</p>"
 
     # displaying the pandas data as an html table
-    data = data[['action', 'date', 'description', 'category', 
-                 'amount %s' % currency, 
+    data = data[['action', 'date', 'description', 'category',
+                 'amount %s' % currency,
                  'balance  %s' % currency]]
 
-    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'],
                         index=False, escape=False, na_rep='')
     accounts = get_balance()
-    cur_balance = accounts.ix[accounts.name == account.name, 'amount'].values[0]
-    eom_balance = accounts.ix[accounts.name == account.name, 'end_of_month_amount'].values[0]
+    cur_balance = accounts.ix[
+        accounts.name == account.name, 'amount'].values[0]
+    eom_balance = accounts.ix[
+        accounts.name == account.name, 'end_of_month_amount'].values[0]
 
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+        account_name=account.name)
 
-    return render_template('transactions.html', data=data, 
+    return render_template('transactions.html', data=data,
                            several_accounts=(models.Account.query.count() > 1),
                            currency=account.currency,
                            cur_balance=cur_balance, eom_balance=eom_balance,
@@ -267,7 +311,7 @@ def transactions(account_id):
 @app.route('/info_transaction/<int:transaction_id>')
 def info_transaction(transaction_id):
     note = models.Transaction.query.get(transaction_id).note
-    return render_template('info_transaction.html', 
+    return render_template('info_transaction.html',
                            note=note,
                            **context)
 
@@ -286,7 +330,7 @@ def delete_transaction(account_id, transaction_id):
 def add_transaction(account_id, operationtype):
     if operationtype == 'transfer':
         return redirect('/account/%d/add_transfer' % account_id)
-    
+
     account = models.Account.query.get(account_id)
     form = forms.AddTransactionForm()
 
@@ -330,9 +374,9 @@ def add_transaction(account_id, operationtype):
         return redirect('/account/%d/transactions' % account_id)
     else:
         previous_cheque_nb = models.Transaction.query.filter(models.Transaction.account == account.name)\
-                                                 .filter(models.Transaction.cheque_number != None)\
-                                                 .order_by(models.Transaction.cheque_number)\
-                                                 .order_by(desc(models.Transaction.date)).all()
+            .filter(models.Transaction.cheque_number != None)\
+            .order_by(models.Transaction.cheque_number)\
+            .order_by(desc(models.Transaction.date)).all()
 
         if previous_cheque_nb:
             previous_cheque_nb = previous_cheque_nb[-1].cheque_number
@@ -344,7 +388,7 @@ def add_transaction(account_id, operationtype):
 
     return render_template('add_transaction.html',
                            account_id=account_id,
-                           form=form, label_operationtype= 'Add %s' % operationtype,
+                           form=form, label_operationtype='Add %s' % operationtype,
                            currency=account.currency,
                            **context)
 
@@ -433,9 +477,9 @@ def edit_transaction(account_id, transaction_id):
             form.cheque_number.data = transaction.cheque_number
         else:
             previous_cheque_nb = models.Transaction.query.filter(models.Transaction.account == account.name)\
-                                                     .filter(models.Transaction.cheque_number != None)\
-                                                     .order_by(models.Transaction.cheque_number)\
-                                                     .order_by(desc(models.Transaction.date)).all()
+                .filter(models.Transaction.cheque_number != None)\
+                .order_by(models.Transaction.cheque_number)\
+                .order_by(desc(models.Transaction.date)).all()
 
             if previous_cheque_nb:
                 previous_cheque_nb = previous_cheque_nb[-1].cheque_number
@@ -444,8 +488,8 @@ def edit_transaction(account_id, transaction_id):
 
             form.cheque_number.data = str(int(previous_cheque_nb) + 1)
 
-    return render_template('add_transaction.html', 
-                           label_operationtype= 'Edit transaction',
+    return render_template('add_transaction.html',
+                           label_operationtype='Edit transaction',
                            account_id=account.id,
                            form=form, currency=account.currency,
                            **context)
@@ -464,8 +508,8 @@ def scheduled_transactions(account_id):
         first_day = datetime.datetime.now().replace(day=1)
         last_day = first_day + relativedelta(months=+1)
         while first_day \
-            + relativedelta(**{operation.every_type: i * operation.every_nb}) \
-            < last_day:
+                + relativedelta(**{operation.every_type: i * operation.every_nb}) \
+                < last_day:
             i += 1
         if operation.amount >= 0:
             monthly_income += operation.amount * i
@@ -473,37 +517,38 @@ def scheduled_transactions(account_id):
             monthly_expense += operation.amount * i
 
     # selecting only scheduled transactions that are still active
-    data = data[(data['ends'] > datetime.datetime.now()) | pd.isnull(data['ends'])]
+    data = data[
+        (data['ends'] > datetime.datetime.now()) | pd.isnull(data['ends'])]
 
     pd.to_datetime(data['next_occurence'])
 
     data = data.rename(columns={'next_occurence': 'next occurence'})
 
-
     # category icons
-    data['category'] = data['category'].map(lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
-    
-    # every is mix of two columns
-    data['every'] = data['every_nb'].astype(str) + ' ' + data['every_type'].astype(str)
+    data['category'] = data['category'].map(
+        lambda x: '<i class="fa %s fa-fw" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
+    # every is mix of two columns
+    data['every'] = data['every_nb'].astype(
+        str) + ' ' + data['every_type'].astype(str)
 
     data['action'] = ('<div class="btn-group">'
-                 '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
-                       '         <i class="fa fa-cog"></i>'
-                       '    </a>'
-                 '<ul class="dropdown-menu" role="menu">')
-    data['action'] += np.where(data['note'] != '', 
-                          ('<li>'
-                           '<a href="/info_scheduled_transaction/' + data['id'].astype(str) + 
-                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
-                           '</li>'),
-                          '')
+                      '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
+                      '         <i class="fa fa-cog"></i>'
+                      '    </a>'
+                      '<ul class="dropdown-menu" role="menu">')
+    data['action'] += np.where(data['note'] != '',
+                               ('<li>'
+                                '<a href="/info_scheduled_transaction/' + data['id'].astype(str) +
+                                '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                                '</li>'),
+                               '')
     data['action'] += ('<li>'
-                  '<a href="/edit_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+                       '<a href="/edit_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) +
+                       '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
-                  '<a href="/delete_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
+                       '<a href="/delete_scheduled_transaction/account/%s/' % account_id + data['id'].astype(str) +
+                       '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
     data['action'] += '</ul></div>'
 
     # sorting based on next occurence
@@ -514,27 +559,31 @@ def scheduled_transactions(account_id):
 
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = np.nan
-    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
-    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + \
+        data[data['amount'] >= 0]['amount'].astype(str) + "</p>"
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + \
+        data[data['amount'] < 0]['amount'].astype(str) + "</p>"
 
-    data['create_btn'] = np.where(data['next occurence'] <= datetime.datetime.now(), '#E74C3C', '#95a5a6')
+    data['create_btn'] = np.where(
+        data['next occurence'] <= datetime.datetime.now(), '#E74C3C', '#95a5a6')
 
     data['action'] += ('<a href="/create_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmcreate" style="color:' + data['create_btn'] + ';" rel="tooltip" data-toggle="tooltip" data-placement="top" title="create">'
                        '         <i class="fa fa-play-circle"></i>'
-                       '</a>')    
+                       '</a>')
     data['action'] += ('<a href="/skip_scheduled_transaction/%s/' % account_id + data['id'].astype(str) + '" class="btn btn-xs confirmskip" style="color:#95a5a6;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="skip">'
                        '         <i class="fa fa-step-forward"></i>'
                        '</a>')
 
     # displaying the pandas data as an html table
-    data = data[['action', 'next occurence', 'description', 
-                 'category', 'amount %s' % currency, 
+    data = data[['action', 'next occurence', 'description',
+                 'category', 'amount %s' % currency,
                  'every']]
 
-    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'],
                         index=False, escape=False, na_rep='')
 
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+        account_name=account.name)
 
     return render_template('scheduled_transactions.html', data=data,
                            monthly_expense=monthly_expense, monthly_income=monthly_income,
@@ -548,7 +597,8 @@ def delete_scheduled_transaction(account_id, transaction_id):
     db.session.delete(transaction)
     db.session.commit()
     account = models.Account.query.get(account_id)
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+        account_name=account.name)
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
@@ -579,20 +629,21 @@ def add_scheduled_transaction(account_id, operationtype):
                                         description=form.description.data.upper(),
                                         category=form.category.data,
                                         note=form.note.data.upper(),
-                                        every_nb=form.every_nb.data, 
+                                        every_nb=form.every_nb.data,
                                         every_type=form.every_type.data,
                                         ends=form.ends.data)
 
         # adding to database
         db.session.add(u)
         db.session.commit()
-        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+            account_name=account.name)
         return redirect('/account/%d/scheduled_transactions' % account_id)
-    return render_template('add_transaction.html', 
-                           form=form, 
+    return render_template('add_transaction.html',
+                           form=form,
                            account_id=account_id,
                            currency=account.currency,
-                           label_operationtype= 'Add scheduled %s' % operationtype,
+                           label_operationtype='Add scheduled %s' % operationtype,
                            **context)
 
 
@@ -616,7 +667,8 @@ def create_scheduled_transaction(account_id, transaction_id):
     db.session.commit()
 
     account = models.Account.query.get(account_id)
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+        account_name=account.name)
 
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
@@ -629,14 +681,15 @@ def skip_scheduled_transaction(account_id, transaction_id):
     db.session.commit()
     account = models.Account.query.get(account_id)
 
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+        account_name=account.name)
     return redirect('/account/%d/scheduled_transactions' % account_id)
 
 
 @app.route('/info_scheduled_transaction/<int:transaction_id>')
 def info_scheduled_transaction(transaction_id):
     s_transaction = models.ScheduledTransaction.query.get(transaction_id)
-    return render_template('info_transaction.html', 
+    return render_template('info_transaction.html',
                            note=s_transaction.note,
                            **context)
 
@@ -663,7 +716,8 @@ def edit_scheduled_transaction(account_id, transaction_id):
         transaction.every_type = form.every_type.data
         transaction.ends = form.ends.data
         db.session.commit()
-        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+        context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+            account_name=account.name)
         return redirect('/account/%d/scheduled_transactions' % account.id)
     else:
         form.date.data = transaction.next_occurence
@@ -674,10 +728,10 @@ def edit_scheduled_transaction(account_id, transaction_id):
         form.every_nb.data = str(transaction.every_nb)
         form.every_type.data = transaction.every_type
         form.ends.data = transaction.ends
-    return render_template('add_transaction.html', 
+    return render_template('add_transaction.html',
                            account_id=account.id,
                            currency=account.currency,
-                           label_operationtype= 'Edit scheduled transaction',
+                           label_operationtype='Edit scheduled transaction',
                            form=form,
                            **context)
 
@@ -705,20 +759,22 @@ def display_graph(account_id):
         end_day = datetime.datetime.strptime(form.end.data, '%d/%m/%Y')
     else:
         now = datetime.datetime.now()
-        start_day, end_day = calendar.monthrange(year=now.year, month=now.month)
+        start_day, end_day = calendar.monthrange(
+            year=now.year, month=now.month)
         start_day = datetime.date(now.year, now.month, 1)
         end_day = datetime.date(now.year, now.month, end_day)
         form.start.data = start_day.strftime('%d/%m/%Y')
         form.end.data = end_day.strftime('%d/%m/%Y')
 
     data = compute(df, start_day, end_day)
-    csv_fname = os.path.join(app.config['DB_FOLDER'], '..', 'analysis_per_category.xls')
+    csv_fname = os.path.join(
+        app.config['DB_FOLDER'], '..', 'analysis_per_category.xls')
     data.to_excel(csv_fname)
     csv_fname = os.path.relpath(csv_fname, start=app.config['BASEDIR'])
     data['str_category'] = data.index.copy()
     data['category'] = np.nan
 
-    normalization = max(abs(data[data['amount'] < 0].sum()['amount']), 
+    normalization = max(abs(data[data['amount'] < 0].sum()['amount']),
                         abs(data[data['amount'] >= 0].sum()['amount']))
 
     total_expense = np.sum(data[data['amount'] < 0]['amount'])
@@ -726,16 +782,17 @@ def display_graph(account_id):
     total_income = np.sum(data[data['amount'] >= 0]['amount'])
     total_income_width = 80 * total_income / normalization
 
-    data.loc[data['amount'] >= 0, 'category'] = data[data['amount'] >= 0].index.map(lambda x: '<i class="fa %s fa-fw"></i>' % (dict_category2icon[x]))
-    data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(lambda x: '<i class="fa %s fa-fw"></i>' % (dict_category2icon[x]))
+    data.loc[data['amount'] >= 0, 'category'] = data[data['amount'] >= 0].index.map(
+        lambda x: '<i class="fa %s fa-fw"></i>' % (dict_category2icon[x]))
+    data.loc[data['amount'] < 0, 'category'] = data[data['amount'] < 0].index.map(
+        lambda x: '<i class="fa %s fa-fw"></i>' % (dict_category2icon[x]))
     data['percent'] = 80 * data['amount'] / normalization
 
-    
     data['category_link'] = data['str_category'].map(lambda x: category_id(x)).astype(str) \
-                            + '/' + start_day.strftime('%d%m%Y') + end_day.strftime('%d%m%Y')
+        + '/' + start_day.strftime('%d%m%Y') + end_day.strftime('%d%m%Y')
 
     return render_template('graphs.html',
-                           account_id=account.id, csv_fname=csv_fname, 
+                           account_id=account.id, csv_fname=csv_fname,
                            form=form, data=list(data.itertuples()), min_date=min_date,
                            total_expense=total_expense, total_expense_width=total_expense_width,
                            total_income=total_income, total_income_width=total_income_width,
@@ -752,28 +809,28 @@ def transactions_category(account_id, category_id, date_range):
 
     data = pd.read_sql_table('transaction', db.engine)
 
-    data = data[(data['account'] == account.name) & 
+    data = data[(data['account'] == account.name) &
                 (data['category'] == category_name(int(category_id))) &
                 (data['date'] >= start_date) &
                 (data['date'] <= end_date)]
 
     data['action'] = ('<div class="btn-group">'
-                 '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
-                 '         <i class="fa fa-cog"></i>'
-                 '    </button>'
-                 '<ul class="dropdown-menu" role="menu">')
-    data['action'] += np.where(data['note'] != '', 
-                          ('<li>'
-                           '<a href="/info_transaction/' + data['id'].astype(str) + 
-                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
-                           '</li>'),
-                          '')
+                      '    <button type="button" class="btn btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">'
+                      '         <i class="fa fa-cog"></i>'
+                      '    </button>'
+                      '<ul class="dropdown-menu" role="menu">')
+    data['action'] += np.where(data['note'] != '',
+                               ('<li>'
+                                '<a href="/info_transaction/' + data['id'].astype(str) +
+                                '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                                '</li>'),
+                               '')
     data['action'] += ('<li>'
-                  '<a href="/edit_transaction/' + data['id'].astype(str) + 
-                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+                       '<a href="/edit_transaction/' + data['id'].astype(str) +
+                       '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
-                  '<a href="/delete_transaction/' + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
+                       '<a href="/delete_transaction/' + data['id'].astype(str) +
+                       '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
     data['action'] += '</ul></div>'
 
     # sorting based on descending date
@@ -788,17 +845,20 @@ def transactions_category(account_id, category_id, date_range):
 
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = np.nan
-    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
-    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + \
+        data[data['amount'] >= 0]['amount'].astype(str) + "</p>"
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + \
+        data[data['amount'] < 0]['amount'].astype(str) + "</p>"
 
     # displaying the pandas data as an html table
     data = data[['action', 'date', 'description',
                  'amount %s' % currency]]
 
-    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'], 
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'],
                         index=False, escape=False, na_rep='')
-    return render_template('transactions.html', data=data, 
-                           currency=account.currency, category=category_name(int(category_id)), 
+    return render_template('transactions.html', data=data,
+                           currency=account.currency, category=category_name(
+                               int(category_id)),
                            account_id=account_id, **context)
 
 
@@ -832,30 +892,31 @@ def reconcile_transactions_2(account_id):
     data = data[data['reconciled'] != True]
     data = data[data['account'] == account.name]
 
-    form.reconciled_transactions.choices = zip(data['id'].astype(str).values, 
+    form.reconciled_transactions.choices = zip(data['id'].astype(str).values,
                                                data['id'].astype(str).values)
 
     data['checked'] = [i for i in form.reconciled_transactions]
 
-    data['category'] = data['category'].map(lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
+    data['category'] = data['category'].map(
+        lambda x: '<i class="fa %s" rel="tooltip" data-toggle="tooltip" data-placement="top" title="%s"></i>' % (dict_category2icon[x], x))
 
     data['action'] = ('<div class="btn-group">'
-                 '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
-                       '         <i class="fa fa-cog"></i>'
-                       '    </a>'
-                 '<ul class="dropdown-menu" role="menu">')
-    data['action'] += np.where(data['note'] != '', 
-                          ('<li>'
-                           '<a href="/info_transaction/' + data['id'].astype(str) + 
-                           '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
-                           '</li>'),
-                          '')
+                      '    <a class="btn btn-xs dropdown-toggle" data-toggle="dropdown" style="color: #2C3E50;" rel="tooltip" data-toggle="tooltip" data-placement="top" title="actions">'
+                      '         <i class="fa fa-cog"></i>'
+                      '    </a>'
+                      '<ul class="dropdown-menu" role="menu">')
+    data['action'] += np.where(data['note'] != '',
+                               ('<li>'
+                                '<a href="/info_transaction/' + data['id'].astype(str) +
+                                '" class="transactioninfo"><i class="fa fa-info fa-fw"></i> Information</a>'
+                                '</li>'),
+                               '')
     data['action'] += ('<li>'
-                  '<a href="/edit_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
+                       '<a href="/edit_transaction/account/%s/' % account_id + data['id'].astype(str) +
+                       '"><i class="fa fa-edit fa-fw"></i> Edit</a></li>')
     data['action'] += ('<li>'
-                  '<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) + 
-                  '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
+                       '<a href="/delete_transaction/account/%s/' % account_id + data['id'].astype(str) +
+                       '" class="confirmdelete"><i class="fa fa-trash-o fa-fw"></i> Delete </a></li>')
     data['action'] += '</ul></div>'
 
     # sorting based on descending date
@@ -863,29 +924,30 @@ def reconcile_transactions_2(account_id):
 
     # adding the total amount
     currency = '(<i class="fa fa-%s"></i>)' % account.currency
-    data['balance  %s' % currency] = data['amount'][::-1].cumsum()[::-1] + float(account.reconciled_balance)
+    data['balance  %s' % currency] = data['amount'][
+        ::-1].cumsum()[::-1] + float(account.reconciled_balance)
 
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = np.nan
-    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + data[data['amount'] >= 0]['amount'].astype(str) + "</p>" 
-    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + data[data['amount'] < 0]['amount'].astype(str) + "</p>" 
+    data['amount %s' % currency].loc[data['amount'] >= 0] = "<p class='text-success'> <i class='fa fa-chevron-up'></i> " + \
+        data[data['amount'] >= 0]['amount'].astype(str) + "</p>"
+    data['amount %s' % currency].loc[data['amount'] < 0] = "<p class='text-danger'> <i class='fa fa-chevron-down'></i> " + \
+        data[data['amount'] < 0]['amount'].astype(str) + "</p>"
 
     # displaying the pandas data as an html table
-    data = data[['action', 'date', 'description', 'category', 
-                 'amount %s' % currency, 
+    data = data[['action', 'date', 'description', 'category',
+                 'amount %s' % currency,
                  'balance  %s' % currency, 'checked']]
 
-    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed chkclass'], 
+    data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed chkclass'],
                         index=False, escape=False, na_rep='')
-    accounts = get_balance()
-    cur_balance = accounts.ix[accounts.name == account.name, 'amount'].values[0]
-    eom_balance = accounts.ix[accounts.name == account.name, 'end_of_month_amount'].values[0]
 
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(account_name=account.name)
+    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
+        account_name=account.name)
 
     diff = account.reconciled_balance - account.tmp_reconciled_balance
 
-    if form.validate_on_submit() :
+    if form.validate_on_submit():
         for transaction_id in form.reconciled_transactions.data:
             transaction = models.Transaction.query.get(int(transaction_id))
             transaction.reconciled = True
@@ -901,6 +963,7 @@ def reconcile_transactions_2(account_id):
     return render_template('reconcile_check.html', form=form, diff='%.2f' % diff,
                            currency=account.currency, data=data,
                            account_id=account_id, **context)
+
 
 @app.errorhandler(404)
 def page_not_found(e):
