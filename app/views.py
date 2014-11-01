@@ -533,12 +533,10 @@ def edit_transaction(account_id, transaction_id):
 @app.route('/account/<int:account_id>/scheduled_transactions')
 def scheduled_transactions(account_id):
     account = models.Account.query.get(account_id)
-    data = pd.read_sql_table('scheduled_transaction', db.engine)
-    data = data[data['account'] == account.name]
 
     data = pd.read_sql_query(("SELECT *"
                               "FROM scheduled_transaction "
-                              "WHERE account = '%s'" % account.name), db.engine)
+                              "WHERE account = '%s' " % account.name), db.engine)
 
     monthly_income = 0
     monthly_expense = 0
@@ -556,6 +554,7 @@ def scheduled_transactions(account_id):
             monthly_expense += operation.amount * i
 
     # selecting only scheduled transactions that are still active
+    data['ends'] = pd.to_datetime(data['ends'])
     data = data[
         (data['ends'] > datetime.datetime.now()) | pd.isnull(data['ends'])]
 
@@ -579,6 +578,7 @@ def scheduled_transactions(account_id):
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = data.apply(amount_button, axis=1)
 
+    data['next occurence'] = pd.to_datetime(data['next occurence'])
     data['create_btn'] = np.where(
         data['next occurence'] <= datetime.datetime.now(), '#E74C3C', '#95a5a6')
 
