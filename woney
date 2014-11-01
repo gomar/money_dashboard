@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-import os, time
-from threading import Thread
-import subprocess
+import os
+import webbrowser, threading
 
-os.chdir('/Users/adriengomar/Documents/PERSONAL/WEB_APP/WONEY/')
+os.chdir(os.path.split(__file__)[0])
 
 from app import app
 
-thread = Thread(target=app.run)
-thread.start()
-time.sleep(10)
-subprocess.call(['/Applications/node-webkit.app/Contents/MacOS/node-webkit', 'package.nw'])
+url = "http://127.0.0.1:5000"
+
+threading.Timer(1.25, lambda:webbrowser.open(url)).start()
+app.run(debug=True)
