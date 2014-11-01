@@ -84,7 +84,8 @@ def account_name(url):
 
 
 def get_balance():
-    accounts = pd.read_sql_table('account', db.engine)
+    accounts = pd.read_sql_query(("SELECT reconciled_balance, name, id, currency "
+                                  "FROM account "), db.engine)
 
     # reading transactions
     transactions = pd.read_sql_query(("SELECT account, amount "
@@ -95,18 +96,22 @@ def get_balance():
     scheduled_transactions = pd.read_sql_table('scheduled_transaction',
                                                db.engine)
 
-    transactions = transactions.rename(columns={'account': 'name'})
-    transactions = transactions.groupby('name', as_index=False).sum()
+    # adding the total of transactions to reconciled balance
+    transactions = transactions.groupby('account', as_index=False).sum()
     accounts['amount'] = accounts['reconciled_balance']
-    for name in transactions.name:
-        accounts.ix[accounts['name'] == name, 'amount'] += \
-            transactions.ix[transactions.name == name, 'amount'].iloc[-1]
+    for account_name in transactions.account:
+        accounts.ix[accounts['name'] == account_name, 'amount'] += \
+            transactions.ix[transactions.account == account_name, 'amount'].iloc[-1]
+
     # taking scheduled transactions into account
     accounts['end_of_month_amount'] = accounts['amount']
+    today = datetime.datetime.now()
+    # looping on all the scheduled transactions
     for idx, operation in scheduled_transactions.iterrows():
         i = 0
-        today = datetime.datetime.now()
         last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
+        # if next occurence is before last day of the month,
+        # then we add this to the total
         while (operation.next_occurence
                + relativedelta(**{operation.every_type:
                                   i * operation.every_nb})
@@ -130,29 +135,31 @@ def action_button(df, list_action, other_buttons=None):
         html.a(class_="btn btn-xs dropdown-toggle text-primary",
                data_toggle="dropdown")(
             html.i(class_="fa fa-cog")),
-            html.ul(class_="dropdown-menu",
-                    role="menu")(list_action),
+        html.ul(class_="dropdown-menu",
+                role="menu")(list_action),
         other_buttons).render().replace('\n', '')
 
 
 def action_button_transaction(df, transaction, account_id, other_buttons=None):
     return action_button(df=df, other_buttons=other_buttons,
                          list_action=[
-    html.li(
-        html.a(href="/info_%s/%d" % (transaction, df['id']),
-               class_="transactioninfo")(
-            html.i(class_="fa fa-info fa-fw")('information'))) if df['note'] != '' else '',
-    html.li(
-        html.a(href="/edit_%s/account/%d/%d" % (transaction, account_id, df['id']))(
-            html.i(class_="fa fa-edit fa-fw")('edit'))),
-    html.li(
-        html.a(href="/delete_%s/account/%d/%d" % (transaction, account_id, df['id']),
-               class_="confirmdelete")(
-            html.i(class_="fa fa-trash-o fa-fw")('delete')))])
+        html.li(
+            html.a(href="/info_%s/%d" % (transaction, df['id']),
+                   class_="transactioninfo")(
+                html.i(class_="fa fa-info fa-fw")('information'))) if df['note'] != '' else '',
+        html.li(
+            html.a(href="/edit_%s/account/%d/%d" % (transaction, account_id, df['id']))(
+                html.i(class_="fa fa-edit fa-fw")('edit'))),
+        html.li(
+            html.a(href="/delete_%s/account/%d/%d" % (transaction, account_id, df['id']),
+                   class_="confirmdelete")(
+                html.i(class_="fa fa-trash-o fa-fw")('delete')))])
+
 
 def amount_button(df):
     return html.p(class_="text-%s" % ('success' if df['amount'] >= 0 else 'danger'))(
-        html.i(class_="fa fa-chevron-%s" % ('up' if df['amount'] >= 0 else 'down')),
+        html.i(class_="fa fa-chevron-%s" %
+               ('up' if df['amount'] >= 0 else 'down')),
         df['amount']).render().replace('\n', '')
 
 
@@ -163,7 +170,7 @@ def transaction_type_button(df):
     elif df['operation_type'] == 'cheque':
         return '<small>%d</small>' % df['cheque_number']
     elif df['operation_type'] == 'online payment':
-        return html.i(class_="fa fa-laptop")
+        return html.i(class_="fa fa-desktop")
     else:
         return ''
 
@@ -233,7 +240,7 @@ def home():
     del data['id']
 
     data = data.rename(columns={'amount': html.span(class_="pull-right")(
-                                                    "amount").render().replace('\n', '')})
+        "amount").render().replace('\n', '')})
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped'],
                         index=False, escape=False, na_rep='')
@@ -304,7 +311,8 @@ def transactions(account_id):
     data = data.sort(['date'], ascending=False)
 
     # adding the total amount
-    currency = html.i(class_="fa fa-%s" % account.currency).render().replace('\n', '')
+    currency = html.i(class_="fa fa-%s" %
+                      account.currency).render().replace('\n', '')
     data['balance  %s' % currency] = data['amount'][
         ::-1].cumsum()[::-1] + float(account.reconciled_balance)
 
@@ -312,8 +320,6 @@ def transactions(account_id):
     data['amount %s' % currency] = data.apply(amount_button, axis=1)
 
     data['type'] = data.apply(transaction_type_button, axis=1)
-
-    transaction_type_button
 
     # displaying the pandas data as an html table
     data = data[['action', 'date', 'type', 'description', 'category',
@@ -366,10 +372,9 @@ def add_transaction(account_id, operationtype):
 
     # adding an extra category depending on type of operation
     if operationtype == 'debit':
-        additional_category = 'Misc. Expense'
+        categories = list_category + ['Misc. Expense']
     elif operationtype == 'credit':
-        additional_category = 'Misc. Income'
-    categories = list_category + [additional_category]
+        categories = list_category + ['Misc. Income']
     categories.sort()
     form.category.choices = zip(categories, categories)
 
@@ -531,6 +536,10 @@ def scheduled_transactions(account_id):
     data = pd.read_sql_table('scheduled_transaction', db.engine)
     data = data[data['account'] == account.name]
 
+    data = pd.read_sql_query(("SELECT *"
+                              "FROM scheduled_transaction "
+                              "WHERE account = '%s'" % account.name), db.engine)
+
     monthly_income = 0
     monthly_expense = 0
     for idx, operation in data.iterrows():
@@ -573,14 +582,14 @@ def scheduled_transactions(account_id):
     data['create_btn'] = np.where(
         data['next occurence'] <= datetime.datetime.now(), '#E74C3C', '#95a5a6')
 
-
     action = lambda df: action_button_transaction(df=df,
                                                   transaction='scheduled_transaction',
                                                   account_id=account_id,
                                                   other_buttons=[
         html.a(href="/create_scheduled_transaction/%d/%d" % (account_id, df['id']),
                class_="btn btn-xs confirmcreate",
-               style="color:%s;" % df['create_btn'],
+               style="color:%s;" % df[
+                   'create_btn'],
                rel="tooltip",
                data_toggle="tooltip",
                data_placement="top",
@@ -892,9 +901,10 @@ def reconcile_transactions_2(account_id):
     form = forms.ReconcileCheckTransactionsForm()
     account = models.Account.query.get(account_id)
 
-    data = pd.read_sql_table('transaction', db.engine)
-    data = data[data['reconciled'] != True]
-    data = data[data['account'] == account.name]
+    data = pd.read_sql_query(("SELECT *"
+                              "FROM `transaction` "
+                              "WHERE reconciled is not 1 "
+                              "AND account = '%s'" % account.name), db.engine)
 
     form.reconciled_transactions.choices = zip(data['id'].astype(str).values,
                                                data['id'].astype(str).values)
