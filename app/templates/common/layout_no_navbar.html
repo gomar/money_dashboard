@@ -19,9 +19,10 @@
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 
     <style type="text/css">
-    .navbar-default .navbar-text {
-      color: #ffffff;
-    }
+        .navbar-default .navbar-text {
+          color: #ffffff;
+        }
+        a, a:hover {text-decoration: none !important}
     </style>
     {% block css %}{% endblock %}
   </head>
@@ -54,7 +55,7 @@
         $('ul.nav a').filter(function() {
             return this.href == url;
         }).parent().addClass('active');
-        
+
         $(function () {
             $("[rel='tooltip']").tooltip({
                 'delay': {show: 750}
