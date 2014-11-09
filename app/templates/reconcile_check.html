@@ -34,9 +34,9 @@ $(document).ready(function () {
 	    checkbox.onclick = function() {
 	    	var amount = parseFloat(this.parentNode.parentNode.getElementsByTagName("td")[4].textContent);
 	    	if($(this).is(':checked')) {
-	    		$('#test').text(Math.round(parseFloat($('#test').text()) + amount) * 100 / 100);
+	    		$('#test').text(Math.round((parseFloat($('#test').text()) + amount) * 100) / 100);
 	    	} else if(!$(this).is(':checked')) {
-	    		$('#test').text(Math.round(parseFloat($('#test').text()) - amount) * 100 / 100);
+	    		$('#test').text(Math.round((parseFloat($('#test').text()) - amount) * 100) / 100);
 	    	}
 	    	if(Math.round(parseFloat($('#test').text()) * 100) / 100 == 0) {
 	           $('button[type="submit"]').removeAttr('disabled');
