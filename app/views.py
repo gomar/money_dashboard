@@ -58,7 +58,7 @@ def update_waiting_scheduled_transactions(account_name=None):
                     <= datetime.datetime.now())\
             .filter(or_(models.ScheduledTransaction.ends
                         > datetime.datetime.now(),
-                        models.ScheduledTransaction.ends is None)).count()
+                        models.ScheduledTransaction.ends == None)).count()
     else:
         return 0
 
@@ -299,6 +299,25 @@ def transactions(account_id):
                               "FROM `transaction` "
                               "WHERE reconciled is not 1 "
                               "AND account = '%s'" % account.name), db.engine)
+
+    accounts = get_balance()
+    cur_balance = accounts.ix[
+        accounts.name == account.name, 'amount'].values[0]
+    eom_balance = accounts.ix[
+        accounts.name == account.name, 'end_of_month_amount'].values[0]
+
+    if len(data) == 0:
+        data = html.p(class_="text-center")(
+            html.i(class_="fa fa-warning"),
+            html.br,
+            'nothing to show')
+        context['waiting_scheduled_transactions'] = \
+            update_waiting_scheduled_transactions(account_name=account.name)
+        return render_template('transactions.html', data=data,
+                               currency=account.currency,
+                               cur_balance=cur_balance, eom_balance=eom_balance,
+                               several_accounts=(models.Account.query.count() > 1),
+                               account_id=account_id, **context)
 
     data['category'] = data.apply(category_icon, axis=1)
 
@@ -547,6 +566,16 @@ def scheduled_transactions(account_id):
             monthly_income += operation.amount * i
         else:
             monthly_expense += operation.amount * i
+
+    if len(data) == 0:
+        data = html.p(class_="text-center")(
+            html.i(class_="fa fa-warning"),
+            html.br,
+            'nothing to show')
+        return render_template('scheduled_transactions.html', data=data,
+                               monthly_expense=monthly_expense, monthly_income=monthly_income,
+                               currency=account.currency,
+                               account_id=account_id, **context)
 
     # selecting only scheduled transactions that are still active
     data['ends'] = pd.to_datetime(data['ends'])
