@@ -328,11 +328,6 @@ def transactions(account_id):
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'],
                         index=False, escape=False, na_rep='')
-    accounts = get_balance()
-    cur_balance = accounts.ix[
-        accounts.name == account.name, 'amount'].values[0]
-    eom_balance = accounts.ix[
-        accounts.name == account.name, 'end_of_month_amount'].values[0]
 
     context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
         account_name=account.name)

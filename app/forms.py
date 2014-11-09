@@ -24,8 +24,6 @@ class AddTransactionForm(Form):
     note = TextField('note')
     operation_type = RadioField('operation type', validators=[DataRequired()])
     cheque_number = TextField('cheque_number', validators=[Regexp('\d*')])
-    # def validate_amount(form, field):
-    #     raise ValidationError('test')
 
 
 class AddScheduledTransactionForm(Form):
