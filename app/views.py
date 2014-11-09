@@ -350,9 +350,16 @@ def transactions(account_id, show_type=None):
 
     data['type'] = data.apply(transaction_type_button, axis=1)
 
+    def reconciled(df):
+        if df['reconciled'] == 1:
+            return html.i(class_="fa fa-check-square-o")
+        else:
+            return html.i(class_="fa fa-square-o")
+    data['reconciled'] = data.apply(reconciled, axis=1)
+
     # displaying the pandas data as an html table
     data = data[['action', 'date', 'type', 'description', 'category',
-                 'amount %s' % currency,
+                 'reconciled', 'amount %s' % currency,
                  'balance  %s' % currency]]
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'],
