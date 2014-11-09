@@ -290,15 +290,27 @@ def delete_account(account_id):
     db.session.commit()
     return redirect('/accounts')
 
-
 @app.route('/account/<int:account_id>/transactions')
-def transactions(account_id):
+@app.route('/account/<int:account_id>/transactions/<show_type>')
+def transactions(account_id, show_type=None):
     account = models.Account.query.get(account_id)
 
-    data = pd.read_sql_query(("SELECT *"
-                              "FROM `transaction` "
-                              "WHERE reconciled is not 1 "
-                              "AND account = '%s'" % account.name), db.engine)
+    # update tagged scheduled transactions
+    context['waiting_scheduled_transactions'] = \
+        update_waiting_scheduled_transactions(account_name=account.name)
+
+    if show_type == 'all':
+        data = pd.read_sql_query(("SELECT *"
+                                  "FROM `transaction` "
+                                  "WHERE account = '%s'" % account.name), db.engine)
+        alternative_link = ('show non-reconciled transactions', '/account/%d/transactions' % account_id)
+    else:
+        data = pd.read_sql_query(("SELECT *"
+                                  "FROM `transaction` "
+                                  "WHERE reconciled is not 1 "
+                                  "AND account = '%s'" % account.name), db.engine)
+        alternative_link = ('show all transactions', '/account/%d/transactions/all' % account_id)
+
 
     accounts = get_balance()
     cur_balance = accounts.ix[
@@ -311,8 +323,6 @@ def transactions(account_id):
             html.i(class_="fa fa-warning"),
             html.br,
             'nothing to show')
-        context['waiting_scheduled_transactions'] = \
-            update_waiting_scheduled_transactions(account_name=account.name)
         return render_template('transactions.html', data=data,
                                currency=account.currency,
                                cur_balance=cur_balance, eom_balance=eom_balance,
@@ -348,14 +358,13 @@ def transactions(account_id):
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'],
                         index=False, escape=False, na_rep='')
 
-    context['waiting_scheduled_transactions'] = update_waiting_scheduled_transactions(
-        account_name=account.name)
-
     return render_template('transactions.html', data=data,
                            several_accounts=(models.Account.query.count() > 1),
                            currency=account.currency,
                            cur_balance=cur_balance, eom_balance=eom_balance,
-                           account_id=account_id, **context)
+                           account_id=account_id,
+                           alternative_link=alternative_link,
+                           **context)
 
 
 @app.route('/info_transaction/<int:transaction_id>')
@@ -874,6 +883,8 @@ def transactions_category(account_id, category_id, date_range):
                                                   account_id=account_id)
     data['action'] = data.apply(action, axis=1)
 
+    data['category'] = data.apply(category_icon, axis=1)
+
     # sorting based on descending date
     total_amount = np.sum(data['amount'])
     if total_amount >= 0:
@@ -887,8 +898,10 @@ def transactions_category(account_id, category_id, date_range):
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = data.apply(amount_button, axis=1)
 
+    data['type'] = data.apply(transaction_type_button, axis=1)
+
     # displaying the pandas data as an html table
-    data = data[['action', 'date', 'description',
+    data = data[['action', 'date', 'type', 'description', 'category',
                  'amount %s' % currency]]
 
     data = data.to_html(classes=['table table-hover table-bordered table-striped table-condensed'],
@@ -953,8 +966,10 @@ def reconcile_transactions_2(account_id):
     # replacing amount by in and out for easier reading
     data['amount %s' % currency] = data.apply(amount_button, axis=1)
 
+    data['type'] = data.apply(transaction_type_button, axis=1)
+
     # displaying the pandas data as an html table
-    data = data[['action', 'date', 'description', 'category',
+    data = data[['action', 'date', 'type', 'description', 'category',
                  'amount %s' % currency,
                  'balance  %s' % currency, 'checked']]
 
