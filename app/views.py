@@ -193,57 +193,60 @@ context = {'now': datetime.datetime.now(),
 
 @app.route('/')
 def intro():
-    for table in ['transaction', 'account', 'scheduled_transaction', 'transfer']:
-        pd.read_sql_table(table, db.engine).to_excel(os.path.join(app.config['DB_FOLDER'],
-                                                                  '%s.xls' % table))
     return render_template('intro.html')
 
 
 @app.route('/accounts')
 def home():
-    data = get_balance()
+    if len(pd.read_sql_table('account', db.engine)):
+        data = get_balance()
 
-    action = lambda df: action_button(df=df,
-                                      list_action=[
-        html.li(
-            html.a(href="/delete_account/%d" % df['id'],
-                   class_="confirmdelete")(
-                html.i(class_="fa fa-trash-o fa-fw")('delete')))])
-    data['action'] = data.apply(action, axis=1)
+        action = lambda df: action_button(df=df,
+                                          list_action=[
+            html.li(
+                html.a(href="/delete_account/%d" % df['id'],
+                       class_="confirmdelete")(
+                    html.i(class_="fa fa-trash-o fa-fw")('delete')))])
+        data['action'] = data.apply(action, axis=1)
 
-    # sorting based on currency and name
-    data = data.sort(['currency', 'name'])
+        # sorting based on currency and name
+        data = data.sort(['currency', 'name'])
 
-    # adding currency to amount
-    amount = lambda x: html.span(class_="pull-right")(
-        str(x['amount']),
-        html.i(class_="fa fa-%s" % x['currency'])).render().replace('\n', '')
-    data['amount'] = data.apply(amount, axis=1)
+        # adding currency to amount
+        amount = lambda x: html.span(class_="pull-right")(
+            str(x['amount']),
+            html.i(class_="fa fa-%s" % x['currency'])).render().replace('\n', '')
+        data['amount'] = data.apply(amount, axis=1)
 
-    # displaying the pandas data as an html table
-    data = data[['id', 'action', 'name', 'amount']]
+        # displaying the pandas data as an html table
+        data = data[['id', 'action', 'name', 'amount']]
 
-    name = lambda df: html.span(
-        html.a(class_="text-primary",
-               href="/account/%d/transactions" % df['id'],
-               rel='tooltip',
-               data_toggle="tooltip",
-               data_placement="right",
-               title="select %s" % df['name'],
-               _safe=True)(
-            html.i(class_="fa fa-square",
-                   style="color: #E74C3C;"),
-            '&nbsp;' + df['name'],
-            html.i(class_="fa fa-chevron-right btn btn-xs"))).render().replace('\n', '')
-    data['name'] = data.apply(name, axis=1)
+        name = lambda df: html.span(
+            html.a(class_="text-primary",
+                   href="/account/%d/transactions" % df['id'],
+                   rel='tooltip',
+                   data_toggle="tooltip",
+                   data_placement="right",
+                   title="select %s" % df['name'],
+                   _safe=True)(
+                html.i(class_="fa fa-square",
+                       style="color: #E74C3C;"),
+                '&nbsp;' + df['name'],
+                html.i(class_="fa fa-chevron-right btn btn-xs"))).render().replace('\n', '')
+        data['name'] = data.apply(name, axis=1)
 
-    del data['id']
+        del data['id']
 
-    data = data.rename(columns={'amount': html.span(class_="pull-right")(
-        "amount").render().replace('\n', '')})
+        data = data.rename(columns={'amount': html.span(class_="pull-right")(
+            "amount").render().replace('\n', '')})
 
-    data = data.to_html(classes=['table table-hover table-bordered table-striped'],
-                        index=False, escape=False, na_rep='')
+        data = data.to_html(classes=['table table-hover table-bordered table-striped'],
+                            index=False, escape=False, na_rep='')
+    else:
+        data = html.p(class_="text-center")(
+                      html.i(class_="fa fa-warning"),
+                      html.br,
+                      'start by creating an account')
     return render_template('accounts.html',
                            data=data,
                            **context)
@@ -322,11 +325,12 @@ def transactions(account_id, show_type=None):
         data = html.p(class_="text-center")(
             html.i(class_="fa fa-warning"),
             html.br,
-            'nothing to show')
+            'start by creating a transaction')
         return render_template('transactions.html', data=data,
                                currency=account.currency,
                                cur_balance=cur_balance, eom_balance=eom_balance,
                                several_accounts=(models.Account.query.count() > 1),
+                               alternative_link=alternative_link,
                                account_id=account_id, **context)
 
     data['category'] = data.apply(category_icon, axis=1)
@@ -587,7 +591,7 @@ def scheduled_transactions(account_id):
         data = html.p(class_="text-center")(
             html.i(class_="fa fa-warning"),
             html.br,
-            'nothing to show')
+            'start by creating a scheduled transaction')
         return render_template('scheduled_transactions.html', data=data,
                                monthly_expense=monthly_expense, monthly_income=monthly_income,
                                currency=account.currency,

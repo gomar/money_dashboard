@@ -6,21 +6,25 @@
     <div class="page-header">
         <h3>Reconcile transactions </h3>
     </div>
+    {% if form.previous_date_statement.data is not none %}
     <h4 class="col-xs-offset-2 col-xs-4"> Previous statement </h4>
-    <h4 class="col-xs-4"> New statement </h4>
+    {% endif %}
+    <h4 class="{% if form.previous_date_statement.data is none %}col-xs-offset-2 {% endif %}col-xs-4"> New statement </h4>
     <form method="POST" action="{{ action_url }}" role="form" class="form-horizontal col-xs-12">
 		{{ form.csrf_token }}
 		<!-- PREVIOUS DATE STATEMENT -->
 	    <div class="form-group {% if form.previous_date_statement.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.previous_date_statement.label }}</label>
-	        <div class="col-xs-4">
-		        {{ form.previous_date_statement(class_='form-control', disabled=true) }}
-		        {% if form.previous_date_statement.errors %}
-		            {% for e in form.previous_date_statement.errors %}
-		                <p class="help-block">{{ e }}</p>
-		            {% endfor %}
-		        {% endif %}
-		    </div>
+	        <label class="control-label col-xs-2">{{ form.new_date_statement.label }}</label>
+	        {% if form.previous_date_statement.data is not none %}
+		        <div class="col-xs-4">
+			        {{ form.previous_date_statement(class_='form-control', disabled=true) }}
+			        {% if form.previous_date_statement.errors %}
+			            {% for e in form.previous_date_statement.errors %}
+			                <p class="help-block">{{ e }}</p>
+			            {% endfor %}
+			        {% endif %}
+			    </div>
+		    {% endif %}
 		    <div class="col-xs-4">
 		        {{ form.new_date_statement(class_='form-control', id="my-datepicker") }}
 		        {% if form.new_date_statement.errors %}
@@ -32,7 +36,8 @@
 	    </div>
 	    <!-- PREVIOUS RECONCILE AMOUNT -->
 	   	<div class="form-group {% if form.previous_reconciled_amount.errors %}has-error{% endif %}">
-	        <label class="control-label col-xs-2">{{ form.previous_reconciled_amount.label }}</label>
+	        <label class="control-label col-xs-2">{{ form.new_reconciled_amount.label }}</label>
+	        {% if form.previous_date_statement.data is not none %}
 	        <div class="col-xs-4">
 	        	<div class="input-group">
 		        	{{ form.previous_reconciled_amount(class_='form-control', disabled=true) }}
@@ -44,6 +49,7 @@
 		            {% endfor %}
 		        {% endif %}
 		    </div>
+		    {% endif %}
 		    <div class="col-xs-4">
 		        <div class="input-group">
 		        	{{ form.new_reconciled_amount(class_='form-control') }}
@@ -72,7 +78,7 @@ $('#my-datepicker').datepicker({
     autoclose: true,
     todayHighlight: true,
     format: "dd/mm/yyyy",
-    startDate: "{{ form.previous_date_statement.data.strftime('%d/%m/%Y') }}"
+    startDate: "{% if form.previous_date_statement.data is none %}-infinity{% else %}{{ form.previous_date_statement.data.strftime('%d/%m/%Y') }}{% endif %}"
 });
 </script>
 {% endblock %}
