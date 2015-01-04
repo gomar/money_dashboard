@@ -32,7 +32,7 @@ $(document).ready(function () {
 	for (var i = 0; i < checkboxes.length; i++) {
 	    var checkbox = checkboxes[i];
 	    checkbox.onclick = function() {
-	    	var amount = parseFloat(this.parentNode.parentNode.getElementsByTagName("td")[4].textContent);
+	    	var amount = parseFloat(this.parentNode.parentNode.getElementsByTagName("td")[5].textContent);
 	    	if($(this).is(':checked')) {
 	    		$('#test').text(Math.round((parseFloat($('#test').text()) + amount) * 100) / 100);
 	    	} else if(!$(this).is(':checked')) {
