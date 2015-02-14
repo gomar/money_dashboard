@@ -34,7 +34,9 @@
                     <small> of {{ category }} category</small>
                 {% endif %}
                 <br>
+                {% if alternative_link is defined %}
                 <h5><a class='text-primary' href="{{ alternative_link[1] }}">{{ alternative_link[0] }} &nbsp; <i class="fa fa-caret-right"></i></a></h5>
+                {% endif %}
                 </h3>
             </div>
         </div>
