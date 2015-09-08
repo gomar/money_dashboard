@@ -95,6 +95,10 @@ def get_balance():
     # reading scheduled transactions
     scheduled_transactions = pd.read_sql_table('scheduled_transaction',
                                                db.engine)
+    scheduled_transactions['ends'] = pd.to_datetime(scheduled_transactions['ends'])
+    scheduled_transactions = scheduled_transactions[
+        (scheduled_transactions['ends'] > datetime.datetime.now()) | pd.isnull(scheduled_transactions['ends'])]
+
 
     # adding the total of transactions to reconciled balance
     transactions = transactions.groupby('account', as_index=False).sum()
@@ -106,10 +110,10 @@ def get_balance():
     # taking scheduled transactions into account
     accounts['end_of_month_amount'] = accounts['amount']
     today = datetime.datetime.now()
+    last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
     # looping on all the scheduled transactions
     for idx, operation in scheduled_transactions.iterrows():
         i = 0
-        last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
         # if next occurence is before last day of the month,
         # then we add this to the total
         while (operation.next_occurence
