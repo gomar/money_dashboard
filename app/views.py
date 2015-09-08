@@ -571,21 +571,23 @@ def scheduled_transactions(account_id):
     data = pd.read_sql_query(("SELECT *"
                               "FROM scheduled_transaction "
                               "WHERE account = '%s' " % account.name), db.engine)
+    data['next_occurence'] = pd.to_datetime(data['next_occurence'])
 
     monthly_income = 0
     monthly_expense = 0
     for idx, operation in data.iterrows():
         i = 0
         first_day = datetime.datetime.now().replace(day=1)
-        last_day = first_day + relativedelta(months=+1)
-        while first_day \
-                + relativedelta(**{operation.every_type: i * operation.every_nb}) \
-                < last_day:
-            i += 1
-        if operation.amount >= 0:
-            monthly_income += operation.amount * i
-        else:
-            monthly_expense += operation.amount * i
+        if operation.next_occurence >= datetime.datetime.now():
+            last_day = first_day + relativedelta(months=+1)
+            while first_day \
+                    + relativedelta(**{operation.every_type: i * operation.every_nb}) \
+                    < last_day:
+                i += 1
+            if operation.amount >= 0:
+                monthly_income += operation.amount * i
+            else:
+                monthly_expense += operation.amount * i
 
     if len(data) == 0:
         data = html.p(class_="text-center")(
