@@ -88,9 +88,12 @@ def get_balance():
                                   "FROM account "), db.engine)
 
     # reading transactions
-    transactions = pd.read_sql_query(("SELECT account, amount "
+    transactions = pd.read_sql_query(("SELECT account, amount, date "
                                       "FROM `transaction` "
                                       "where reconciled is not 1"), db.engine)
+
+    today = datetime.datetime.now()
+    last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
 
     # reading scheduled transactions
     scheduled_transactions = pd.read_sql_table('scheduled_transaction',
@@ -101,16 +104,25 @@ def get_balance():
 
 
     # adding the total of transactions to reconciled balance
-    transactions = transactions.groupby('account', as_index=False).sum()
+    transactions_gpby = transactions.groupby('account', as_index=False).sum()
     accounts['amount'] = accounts['reconciled_balance']
-    for account_name in transactions.account:
+    accounts['amount_eom'] = accounts['reconciled_balance']
+    for account_name in transactions_gpby.account:
         accounts.ix[accounts['name'] == account_name, 'amount'] += \
-            transactions.ix[transactions.account == account_name, 'amount'].iloc[-1]
+            transactions_gpby.ix[transactions_gpby.account == account_name, 'amount'].iloc[-1]
+
+    # transactions up to end of month
+    transactions_eom = transactions
+    transactions_eom['date'] = pd.to_datetime(transactions_eom['date'])
+    transactions_eom = transactions_eom[transactions_eom.date <= last_day_of_month]
+    transactions_eom = transactions_eom.groupby('account', as_index=False).sum()
+    for account_name in transactions_eom.account:
+        accounts.ix[accounts['name'] == account_name, 'amount_eom'] += \
+            transactions_eom.ix[transactions_eom.account == account_name, 'amount'].iloc[-1]
+
 
     # taking scheduled transactions into account
-    accounts['end_of_month_amount'] = accounts['amount']
-    today = datetime.datetime.now()
-    last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
+    accounts['end_of_month_amount'] = accounts['amount_eom']
     # looping on all the scheduled transactions
     for idx, operation in scheduled_transactions.iterrows():
         i = 0
