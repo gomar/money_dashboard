@@ -460,8 +460,7 @@ def add_transaction(account_id, operationtype):
     else:
         previous_cheque_nb = models.Transaction.query.filter(models.Transaction.account == account.name)\
             .filter(models.Transaction.cheque_number != None)\
-            .order_by(models.Transaction.cheque_number)\
-            .order_by(desc(models.Transaction.date)).all()
+            .order_by(models.Transaction.id).all()
 
         if previous_cheque_nb:
             previous_cheque_nb = previous_cheque_nb[-1].cheque_number
