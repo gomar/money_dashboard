@@ -337,6 +337,11 @@ def transactions(account_id, show_type=None):
     eom_balance = accounts.ix[
         accounts.name == account.name, 'end_of_month_amount'].values[0]
 
+    # end of month budget per week, as an indication
+    today = datetime.datetime.now()
+    last_day_of_month = today + relativedelta(day=1, months=+1, days=-1)
+    eom_budget = 7 * eom_balance / float((last_day_of_month - today).days)
+
     if len(data) == 0:
         data = html.p(class_="text-center")(
             html.i(class_="fa fa-warning"),
@@ -344,7 +349,7 @@ def transactions(account_id, show_type=None):
             'start by creating a transaction')
         return render_template('transactions.html', data=data,
                                currency=account.currency,
-                               cur_balance=cur_balance, eom_balance=eom_balance,
+                               cur_balance=cur_balance, eom_balance=eom_balance, eom_budget=eom_budget,
                                several_accounts=(models.Account.query.count() > 1),
                                alternative_link=alternative_link,
                                account_id=account_id, **context)
@@ -388,7 +393,7 @@ def transactions(account_id, show_type=None):
     return render_template('transactions.html', data=data,
                            several_accounts=(models.Account.query.count() > 1),
                            currency=account.currency,
-                           cur_balance=cur_balance, eom_balance=eom_balance,
+                           cur_balance=cur_balance, eom_balance=eom_balance, eom_budget=eom_budget,
                            account_id=account_id,
                            alternative_link=alternative_link,
                            **context)
